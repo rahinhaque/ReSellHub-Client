@@ -271,13 +271,13 @@ export default function Navbar({ session }) {
             <div className="flex items-center gap-2">
               <div className="w-px h-5 bg-gray-200 mx-1" aria-hidden="true" />
               <Link
-                href="/login"
+                href="/Login"
                 className="px-3.5 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
               >
                 Log in
               </Link>
               <Link
-                href="/register"
+                href="/Register"
                 className="px-3.5 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm"
               >
                 Register
