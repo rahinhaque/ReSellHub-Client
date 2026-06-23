@@ -1,6 +1,8 @@
 import HeroBanner from "@/components/HeroBanner";
 import MarketplaceStatistics from "@/components/MarketplaceStatistics";
 import SuccessStories from "@/components/SuccessStories";
+import SustainabilityImpact from "@/components/SustainabilityImpact";
+import TrustedSellersShowcase from "@/components/TrustedSellersShowcase";
 import Image from "next/image";
 
 export default function Home() {
@@ -10,6 +12,8 @@ export default function Home() {
 
      <SuccessStories/>
      <MarketplaceStatistics/>
+     <SustainabilityImpact/>
+     <TrustedSellersShowcase/>
     </div>
   );
 }
