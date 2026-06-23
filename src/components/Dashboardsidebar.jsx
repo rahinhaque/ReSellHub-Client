@@ -16,7 +16,6 @@ import {
   CreditCard,
   UserCog,
   Users,
-  ShieldCheck,
   TrendingUp,
   Home,
   LogOut,
@@ -30,7 +29,7 @@ const SELLER_MENU = [
     key: "overview",
     label: "Dashboard Overview",
     icon: LayoutDashboard,
-    href: "/dashboard",
+    href: "/dashboard/seller",
   },
   {
     key: "add-product",
@@ -127,37 +126,37 @@ const ADMIN_MENU = [
 // ── Role theme config ───────────────────────────────────────────────
 const ROLE_THEME = {
   seller: {
-    accent: "emerald",
-    badge: "bg-emerald-500/20 text-emerald-400",
-    hover: "hover:bg-emerald-500/10 hover:text-emerald-300",
-    iconBg: "bg-emerald-500/15",
-    iconText: "text-emerald-400",
-    activeBg: "bg-emerald-500/20",
-    activeText: "text-emerald-300",
-    activeBorder: "border-l-2 border-emerald-500",
-    ring: "ring-emerald-500/40",
+    color: "emerald",
+    badge: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+    activeBg: "bg-emerald-50",
+    activeText: "text-emerald-700",
+    activeIcon: "text-emerald-600",
+    activeDot: "bg-emerald-500",
+    hover: "hover:bg-gray-50 hover:text-gray-800",
+    avatarBg: "bg-emerald-500",
+    statusDot: "bg-emerald-500",
   },
   buyer: {
-    accent: "blue",
-    badge: "bg-blue-500/20 text-blue-400",
-    hover: "hover:bg-blue-500/10 hover:text-blue-300",
-    iconBg: "bg-blue-500/15",
-    iconText: "text-blue-400",
-    activeBg: "bg-blue-500/20",
-    activeText: "text-blue-300",
-    activeBorder: "border-l-2 border-blue-500",
-    ring: "ring-blue-500/40",
+    color: "blue",
+    badge: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+    activeBg: "bg-blue-50",
+    activeText: "text-blue-700",
+    activeIcon: "text-blue-600",
+    activeDot: "bg-blue-500",
+    hover: "hover:bg-gray-50 hover:text-gray-800",
+    avatarBg: "bg-blue-500",
+    statusDot: "bg-blue-500",
   },
   admin: {
-    accent: "amber",
-    badge: "bg-amber-500/20 text-amber-400",
-    hover: "hover:bg-amber-500/10 hover:text-amber-300",
-    iconBg: "bg-amber-500/15",
-    iconText: "text-amber-400",
-    activeBg: "bg-amber-500/20",
-    activeText: "text-amber-300",
-    activeBorder: "border-l-2 border-amber-500",
-    ring: "ring-amber-500/40",
+    color: "amber",
+    badge: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+    activeBg: "bg-amber-50",
+    activeText: "text-amber-700",
+    activeIcon: "text-amber-600",
+    activeDot: "bg-amber-500",
+    hover: "hover:bg-gray-50 hover:text-gray-800",
+    avatarBg: "bg-amber-500",
+    statusDot: "bg-amber-500",
   },
 };
 
@@ -167,7 +166,7 @@ export default function DashboardSidebar({ onClose }) {
   const router = useRouter();
   const { data: session } = useSession();
   const user = session?.user;
-  const role = user?.role ?? "buyer"; // fallback to buyer
+  const role = user?.role ?? "buyer";
 
   const menuItems =
     role === "seller"
@@ -190,66 +189,84 @@ export default function DashboardSidebar({ onClose }) {
     router.refresh();
   };
 
-  const avatarSrc =
-    user?.image ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "User")}&background=059669&color=fff&bold=true`;
+  const initials = (user?.name || "U")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
-    <aside className="w-64 h-screen border-r border-white/5 shrink-0">
-      <div className="h-full flex flex-col bg-gray-950/90 backdrop-blur-xl">
+    <aside className="w-64 h-screen shrink-0 border-r border-gray-100">
+      <div className="h-full flex flex-col bg-white">
         {/* ── Brand ── */}
-        <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+        <div className="px-5 py-[18px] flex items-center justify-between border-b border-gray-100">
           <Link
             href="/"
             className="flex items-center gap-2.5 group"
             onClick={() => onClose?.()}
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow group-hover:scale-105 transition-transform">
-              <RefreshCw size={15} className="text-white" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center group-hover:bg-emerald-600 transition-colors">
+              <RefreshCw size={14} className="text-white" />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="font-bold text-white text-[13px] tracking-tight">
+              <span className="font-semibold text-gray-900 text-[13.5px] tracking-tight">
                 ReSell Hub
               </span>
-              <span className="text-[9px] text-emerald-500 font-medium tracking-widest uppercase">
+              <span className="text-[9px] text-gray-400 font-medium tracking-widest uppercase mt-0.5">
                 marketplace
               </span>
             </div>
           </Link>
 
-          {/* Mobile close button */}
           {onClose && (
             <button
               onClick={onClose}
-              className="lg:hidden p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition"
+              className="lg:hidden p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition"
               aria-label="Close sidebar"
             >
-              <X size={16} />
+              <X size={15} />
             </button>
           )}
         </div>
 
         {/* ── User profile ── */}
-        <div className="px-5 py-4 border-b border-white/5">
+        <div className="px-4 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div
-              className={`w-11 h-11 rounded-full overflow-hidden border-2 border-white/10 ring-2 ${theme.ring} shrink-0`}
-            >
-              <Image
-                src={avatarSrc}
-                alt={user?.name || "User"}
-                width={44}
-                height={44}
-                className="object-cover w-full h-full"
+            {/* Avatar */}
+            <div className="relative shrink-0">
+              {user?.image ? (
+                <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-gray-100">
+                  <Image
+                    src={user.image}
+                    alt={user?.name || "User"}
+                    width={40}
+                    height={40}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              ) : (
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold ${theme.avatarBg}`}
+                >
+                  {initials}
+                </div>
+              )}
+              <span
+                className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${theme.statusDot}`}
               />
             </div>
+
+            {/* Info */}
             <div className="overflow-hidden flex-1 min-w-0">
-              <p className="text-white text-sm font-bold truncate leading-tight">
+              <p className="text-gray-900 text-[13px] font-semibold truncate leading-tight">
                 {user?.name || "User"}
               </p>
-              <p className="text-gray-500 text-xs truncate">{user?.email}</p>
+              <p className="text-gray-400 text-[11px] truncate mt-0.5">
+                {user?.email}
+              </p>
               <span
-                className={`inline-block mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${theme.badge}`}
+                className={`inline-block mt-1.5 text-[9.5px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${theme.badge}`}
               >
                 {role}
               </span>
@@ -259,8 +276,8 @@ export default function DashboardSidebar({ onClose }) {
 
         {/* ── Navigation ── */}
         <nav className="flex-grow overflow-y-auto px-3 py-4 space-y-0.5">
-          <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest px-3 pb-3">
-            Navigation
+          <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest px-2 pb-3">
+            Menu
           </p>
 
           {menuItems.map(({ key, label, icon: Icon, href }) => {
@@ -270,30 +287,39 @@ export default function DashboardSidebar({ onClose }) {
                 key={key}
                 href={href}
                 onClick={() => onClose?.()}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
+                className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 group
                   ${
                     active
                       ? `${theme.activeBg} ${theme.activeText}`
-                      : `text-gray-400 ${theme.hover}`
+                      : `text-gray-500 ${theme.hover}`
                   }`}
               >
-                <span
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors
-                  ${active ? theme.iconBg : "bg-white/5 group-hover:" + theme.iconBg}
-                `}
-                >
+                {/* Active bar */}
+                {active && (
+                  <span
+                    className={`absolute right-0 top-2 bottom-2 w-[3px] rounded-l-full ${theme.activeDot}`}
+                  />
+                )}
+
+                {/* Icon */}
+                <span className="w-8 h-8 flex items-center justify-center shrink-0">
                   <Icon
                     size={16}
                     className={
                       active
-                        ? theme.iconText
-                        : `text-gray-500 group-hover:${theme.iconText}`
+                        ? theme.activeIcon
+                        : "text-gray-400 group-hover:text-gray-600"
                     }
                   />
                 </span>
+
                 <span className="flex-1 truncate">{label}</span>
+
                 {active && (
-                  <ChevronRight size={14} className={theme.iconText} />
+                  <ChevronRight
+                    size={13}
+                    className={`${theme.activeIcon} mr-3`}
+                  />
                 )}
               </Link>
             );
@@ -301,24 +327,27 @@ export default function DashboardSidebar({ onClose }) {
         </nav>
 
         {/* ── Bottom actions ── */}
-        <div className="px-3 py-4 border-t border-white/5 space-y-0.5">
+        <div className="px-3 py-3 border-t border-gray-100 space-y-0.5">
           <Link
             href="/"
             onClick={() => onClose?.()}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 transition-all"
           >
-            <span className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-              <Home size={15} />
+            <span className="w-8 h-8 flex items-center justify-center shrink-0">
+              <Home size={16} className="text-gray-400" />
             </span>
             Back to Site
           </Link>
 
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-500/8 transition-all cursor-pointer"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer"
           >
-            <span className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-              <LogOut size={15} />
+            <span className="w-8 h-8 flex items-center justify-center shrink-0">
+              <LogOut
+                size={16}
+                className="text-gray-400 group-hover:text-red-500"
+              />
             </span>
             Sign Out
           </button>

@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 
 export default function DashboardLayout({ children }) {
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Navbar stays */}
       <Navbar />
 
@@ -17,7 +17,7 @@ export default function DashboardLayout({ children }) {
         <DashboardSidebar />
 
         {/* Main content area — matches the dark sidebar */}
-        <main className="flex-1 overflow-y-auto bg-gray-950 p-6 text-white">
+        <main className="flex-1 overflow-y-auto bg-white p-6 text-gray-900">
           {children}
         </main>
       </div>

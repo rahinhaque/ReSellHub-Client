@@ -25,7 +25,14 @@ export default function Navbar() {
   const catRef = useRef(null);
   const profileRef = useRef(null);
 
-  // Close dropdowns on outside click
+  // ── Role-based dashboard route ──────────────────────────────────
+  const dashboardHref =
+    user?.role === "seller"
+      ? "/dashboard/seller"
+      : user?.role === "admin"
+        ? "/dashboard/admin"
+        : "/dashboard/buyer";
+
   useEffect(() => {
     function handleClick(e) {
       if (catRef.current && !catRef.current.contains(e.target))
@@ -37,7 +44,6 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // Close profile dropdown on route change
   useEffect(() => {
     setProfileOpen(false);
     setCatOpen(false);
@@ -158,10 +164,10 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Dashboard — logged-in only */}
+          {/* Dashboard — logged-in only, role-aware href */}
           {user && (
             <Link
-              href="/dashboard"
+              href={dashboardHref}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 pathname.startsWith("/dashboard")
                   ? "bg-emerald-50 text-emerald-700"
@@ -189,12 +195,12 @@ export default function Navbar() {
             <span>Search products…</span>
           </Link>
 
-          {/* ── Loading skeleton ── */}
+          {/* Loading skeleton */}
           {isPending && (
             <div className="w-9 h-9 rounded-full bg-gray-200 animate-pulse" />
           )}
 
-          {/* ── Logged in: Profile dropdown ── */}
+          {/* Logged in: Profile dropdown */}
           {!isPending && user && (
             <div className="relative" ref={profileRef}>
               <button
@@ -245,7 +251,9 @@ export default function Navbar() {
                           className={`inline-block mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${
                             user.role === "seller"
                               ? "bg-emerald-100 text-emerald-700"
-                              : "bg-blue-100 text-blue-700"
+                              : user.role === "admin"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-blue-100 text-blue-700"
                           }`}
                         >
                           {user.role}
@@ -254,11 +262,11 @@ export default function Navbar() {
                     </div>
                   </div>
 
-                  {/* Nav items */}
+                  {/* Nav items — dashboard link is role-aware */}
                   {[
                     { href: "/profile", icon: "ti-user", label: "My profile" },
                     {
-                      href: "/dashboard",
+                      href: dashboardHref,
                       icon: "ti-layout-dashboard",
                       label: "Dashboard",
                     },
@@ -314,7 +322,6 @@ export default function Navbar() {
 
                   <div className="my-1.5 mx-3 border-t border-gray-100" />
 
-                  {/* Sign out — uses better-auth signOut() */}
                   <button
                     onClick={handleSignOut}
                     className="w-full flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
@@ -329,7 +336,7 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* ── Guest: Log in + Register ── */}
+          {/* Guest: Log in + Register */}
           {!isPending && !user && (
             <div className="flex items-center gap-2">
               <div className="w-px h-5 bg-gray-200 mx-1" aria-hidden="true" />
