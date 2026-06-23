@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { signUp } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -76,63 +77,84 @@ export default function RegisterPage() {
 
   // Final handleSubmit — paste this into your RegisterPage
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+   e.preventDefault();
 
-    const errs = validate();
-    if (Object.keys(errs).length) {
-      setErrors(errs);
-      return;
-    }
+   const errs = validate();
+   if (Object.keys(errs).length) {
+     setErrors(errs);
+     return;
+   }
 
-    setLoading(true);
+   setLoading(true);
 
-    try {
-      // ── 1. Upload photo to imgBB first ───────────────────────────
-      let photoUrl = null;
+   // Show Sonner loading spinner
+   const toastId = toast.loading("Creating your account...");
 
-      if (form.photo) {
-        const imgData = new FormData();
-        imgData.append("image", form.photo);
+   try {
+     // Upload image
+     let photoUrl = null;
 
-        const imgRes = await fetch(
-          `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`,
-          { method: "POST", body: imgData },
-        );
+     if (form.photo) {
+       const imgData = new FormData();
+       imgData.append("image", form.photo);
 
-        if (!imgRes.ok) throw new Error("Image upload failed. Try again.");
+       const imgRes = await fetch(
+         `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`,
+         {
+           method: "POST",
+           body: imgData,
+         },
+       );
 
-        const imgJson = await imgRes.json();
-        photoUrl = imgJson.data.url; // e.g. https://i.ibb.co/xxxx/photo.jpg
-      //   console.log("imgBB upload success:", photoUrl);
-      }
+       if (!imgRes.ok) {
+         throw new Error("Image upload failed. Try again.");
+       }
 
-      // ── 2. Register with better-auth (now includes photoUrl) ─────
-      const { data, error } = await signUp.email({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        image: photoUrl ?? undefined, // ← stored as avatar in MongoDB
-        phone: form.phone,
-        role: form.role,
-      });
+       const imgJson = await imgRes.json();
+       photoUrl = imgJson.data.url;
+     }
 
-      console.log("data:", JSON.stringify(data, null, 2));
-      console.log("error:", JSON.stringify(error, null, 2));
+     // Register user
+     const { data, error } = await signUp.email({
+       name: form.name,
+       email: form.email,
+       password: form.password,
+       image: photoUrl ?? undefined,
+       phone: form.phone,
+       role: form.role,
+     });
 
-      if (error) {
-        setErrors({ form: error.message });
-        return;
-      }
+     if (error) {
+       toast.dismiss(toastId);
+       toast.error(error.message);
 
-      setSubmitted(true);
-    } catch (err) {
-      console.error("Caught error:", err);
-      setErrors({ form: err.message ?? "Something went wrong." });
-    } finally {
-      setLoading(false);
-    }
-  };
+       setErrors({
+         form: error.message,
+       });
+
+       return;
+     }
+
+     // Success
+     toast.dismiss(toastId);
+     toast.success("Account created successfully!");
+
+     setSubmitted(true);
+   } catch (err) {
+     toast.dismiss(toastId);
+
+     toast.error(err.message ?? "Something went wrong.");
+
+     console.error(err);
+
+     setErrors({
+       form: err.message ?? "Something went wrong.",
+     });
+   } finally {
+     setLoading(false);
+   }
+ };
 
   /* ── password strength ── */
   const strength = (() => {
@@ -469,10 +491,20 @@ export default function RegisterPage() {
               {/* ── Submit ── */}
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 rounded-full bg-green-700 hover:bg-green-800 active:scale-[0.98] px-6 py-3.5 text-white font-semibold text-sm shadow-md transition-all mt-2"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 rounded-full bg-green-700 hover:bg-green-800 disabled:bg-green-500 disabled:cursor-not-allowed active:scale-[0.98] px-6 py-3.5 text-white font-semibold text-sm shadow-md transition-all mt-2"
               >
-                Create account
-                <ArrowRight size={16} />
+                {loading ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  <>
+                    Create account
+                    <ArrowRight size={16} />
+                  </>
+                )}
               </button>
             </form>
           </div>
