@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession, signOut } from "@/lib/auth-client";
 
 const CATEGORIES = [
   { label: "Electronics", color: "#1D9E75" },
@@ -13,13 +14,18 @@ const CATEGORIES = [
   { label: "Toys & Games", color: "#7F77DD" },
 ];
 
-export default function Navbar({ session }) {
+export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
+  const user = session?.user;
+
   const [catOpen, setCatOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const catRef = useRef(null);
   const profileRef = useRef(null);
 
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e) {
       if (catRef.current && !catRef.current.contains(e.target))
@@ -31,7 +37,12 @@ export default function Navbar({ session }) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const user = session?.user;
+  // Close profile dropdown on route change
+  useEffect(() => {
+    setProfileOpen(false);
+    setCatOpen(false);
+  }, [pathname]);
+
   const initials = user?.name
     ? user.name
         .split(" ")
@@ -40,6 +51,13 @@ export default function Navbar({ session }) {
         .slice(0, 2)
         .toUpperCase()
     : "?";
+
+  const handleSignOut = async () => {
+    await signOut();
+    setProfileOpen(false);
+    router.push("/");
+    router.refresh();
+  };
 
   const navLinks = [
     { href: "/", label: "Home", icon: "ti-home" },
@@ -98,16 +116,14 @@ export default function Navbar({ session }) {
               <i className="ti ti-category text-base" aria-hidden="true" />
               Categories
               <i
-                className={`ti ti-chevron-down text-xs text-gray-400 transition-transform duration-200 ${
-                  catOpen ? "rotate-180" : ""
-                }`}
+                className={`ti ti-chevron-down text-xs text-gray-400 transition-transform duration-200 ${catOpen ? "rotate-180" : ""}`}
                 aria-hidden="true"
               />
             </button>
 
             {catOpen && (
               <div
-                className="absolute left-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-100"
+                className="absolute left-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50"
                 role="menu"
               >
                 {CATEGORIES.map(({ label, color }) => (
@@ -173,8 +189,13 @@ export default function Navbar({ session }) {
             <span>Search products…</span>
           </Link>
 
-          {user ? (
-            /* ── Profile dropdown ── */
+          {/* ── Loading skeleton ── */}
+          {isPending && (
+            <div className="w-9 h-9 rounded-full bg-gray-200 animate-pulse" />
+          )}
+
+          {/* ── Logged in: Profile dropdown ── */}
+          {!isPending && user && (
             <div className="relative" ref={profileRef}>
               <button
                 className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 flex items-center justify-center text-white text-sm font-bold shadow hover:shadow-md hover:scale-105 transition-all overflow-hidden border-2 border-white ring-1 ring-gray-200"
@@ -190,27 +211,57 @@ export default function Navbar({ session }) {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  initials
+                  <span>{initials}</span>
                 )}
               </button>
 
               {profileOpen && (
                 <div
-                  className="absolute right-0 top-full mt-2 w-60 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50"
+                  className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50"
                   role="menu"
                 >
                   {/* User info header */}
-                  <div className="px-4 py-2.5 border-b border-gray-100 mb-1">
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                      {user.name}
-                    </p>
-                    <span className="text-xs text-gray-500 truncate block">
-                      {user.email}
-                    </span>
+                  <div className="px-4 py-3 border-b border-gray-100 mb-1 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden">
+                      {user.image ? (
+                        <img
+                          src={user.image}
+                          alt={user.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        initials
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {user.name}
+                      </p>
+                      <span className="text-xs text-gray-500 truncate block">
+                        {user.email}
+                      </span>
+                      {user.role && (
+                        <span
+                          className={`inline-block mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${
+                            user.role === "seller"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {user.role}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
+                  {/* Nav items */}
                   {[
                     { href: "/profile", icon: "ti-user", label: "My profile" },
+                    {
+                      href: "/dashboard",
+                      icon: "ti-layout-dashboard",
+                      label: "Dashboard",
+                    },
                     {
                       href: "/dashboard/listings",
                       icon: "ti-package",
@@ -226,12 +277,20 @@ export default function Navbar({ session }) {
                     <Link
                       key={href}
                       href={href}
-                      className="flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className={`flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm transition-colors ${
+                        pathname === href || pathname.startsWith(href + "/")
+                          ? "bg-emerald-50 text-emerald-700 font-medium"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
                       role="menuitem"
                       onClick={() => setProfileOpen(false)}
                     >
                       <i
-                        className={`ti ${icon} text-base text-gray-400`}
+                        className={`ti ${icon} text-base ${
+                          pathname === href || pathname.startsWith(href + "/")
+                            ? "text-emerald-600"
+                            : "text-gray-400"
+                        }`}
                         aria-hidden="true"
                       />
                       {label}
@@ -255,19 +314,23 @@ export default function Navbar({ session }) {
 
                   <div className="my-1.5 mx-3 border-t border-gray-100" />
 
-                  <Link
-                    href="/api/auth/sign-out"
-                    className="flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
+                  {/* Sign out — uses better-auth signOut() */}
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
                     role="menuitem"
+                    style={{ width: "calc(100% - 12px)" }}
                   >
                     <i className="ti ti-logout text-base" aria-hidden="true" />
                     Log out
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>
-          ) : (
-            /* ── Guest buttons ── */
+          )}
+
+          {/* ── Guest: Log in + Register ── */}
+          {!isPending && !user && (
             <div className="flex items-center gap-2">
               <div className="w-px h-5 bg-gray-200 mx-1" aria-hidden="true" />
               <Link
