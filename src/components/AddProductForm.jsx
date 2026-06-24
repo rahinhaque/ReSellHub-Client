@@ -2,6 +2,8 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
+import { addProducts } from "@/lib/api/seller/action";
 import {
   Upload,
   X,
@@ -48,31 +50,28 @@ const CONDITIONS = [
 
 const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
 
-// ── Upload image file to ImgBB, returns the direct image URL ────────
 async function uploadToImgBB(file) {
   const formData = new FormData();
   formData.append("image", file);
 
   const res = await fetch(
     `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
-    { method: "POST", body: formData }
+    { method: "POST", body: formData },
   );
 
   if (!res.ok) throw new Error("ImgBB upload failed");
-
   const data = await res.json();
+  if (!data.success)
+    throw new Error(data.error?.message || "ImgBB upload failed");
 
-  if (!data.success) throw new Error(data.error?.message || "ImgBB upload failed");
-
-  // data.data.url        → direct image link  (use this for <img src>)
-  // data.data.display_url → same but always .png extension
-  // data.data.delete_url → one-click delete link
   return data.data.url;
 }
 
 export default function AddProductForm() {
   const router = useRouter();
   const fileInputRef = useRef(null);
+  const { data: session } = useSession();
+  const sellerEmail = session?.user?.email;
 
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -82,12 +81,12 @@ export default function AddProductForm() {
   const [uploadError, setUploadError] = useState("");
 
   const [form, setForm] = useState({
-    title: "",
+    productTitle: "",
     description: "",
     category: "",
     condition: "",
     price: "",
-    stock: "",
+    quantity: "",
   });
 
   const handleChange = (field, value) => {
@@ -130,31 +129,32 @@ export default function AddProductForm() {
       setSubmitting(true);
       setUploadError("");
 
-      // 1. Upload image → get hosted URL
-      const imageUrl = await uploadToImgBB(image);
+      // 1. Upload to ImgBB → get hosted URL
+      const productImage = await uploadToImgBB(image);
 
-      // 2. Build the final product payload
+      // 2. Build payload — field names match your Express backend exactly
       const productData = {
-        title: form.title,
+        productImage,
+        productTitle: form.productTitle,
         description: form.description,
         category: form.category,
         condition: form.condition,
-        price: parseFloat(form.price),
-        stock: parseInt(form.stock, 10),
-        imageUrl,
+        quantity: parseInt(form.quantity, 10),
+        sellerEmail,
       };
 
-      console.log("✅ Product data ready:", productData);
+      console.log("📦 Sending to backend:", productData);
 
-      // 3. TODO: send productData to your Express API
-      // await fetch(`${process.env.NEXT_PUBLIC_API}/products`, {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(productData),
-      // });
+      // 3. POST to Express via your action
+      await addProducts(productData);
 
+      console.log("✅ Product added to MongoDB successfully");
+
+      // 4. Redirect back to seller dashboard after success
+      router.push("/dashboard/seller");
+      router.refresh();
     } catch (err) {
-      console.error("Submit error:", err);
+      console.error("❌ Submit error:", err);
       setUploadError(err.message || "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
@@ -164,7 +164,6 @@ export default function AddProductForm() {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-2xl mx-auto">
-
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-1">
@@ -179,7 +178,6 @@ export default function AddProductForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-
           {/* ── Image upload ── */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
@@ -211,24 +209,35 @@ export default function AddProductForm() {
             ) : (
               <div
                 onDrop={handleDrop}
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
                 onDragLeave={() => setDragOver(false)}
                 onClick={() => fileInputRef.current?.click()}
                 className={`w-full aspect-video rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-3 cursor-pointer transition-all
-                  ${dragOver
-                    ? "border-emerald-400 bg-emerald-50"
-                    : "border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50/40"
+                  ${
+                    dragOver
+                      ? "border-emerald-400 bg-emerald-50"
+                      : "border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50/40"
                   }`}
               >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${dragOver ? "bg-emerald-100" : "bg-white border border-gray-200"}`}>
-                  <Upload size={20} className={dragOver ? "text-emerald-500" : "text-gray-400"} />
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${dragOver ? "bg-emerald-100" : "bg-white border border-gray-200"}`}
+                >
+                  <Upload
+                    size={20}
+                    className={dragOver ? "text-emerald-500" : "text-gray-400"}
+                  />
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-gray-700">
                     Drop your image here, or{" "}
                     <span className="text-emerald-600">browse</span>
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP — max 5MB</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    PNG, JPG, WEBP — max 5MB
+                  </p>
                 </div>
               </div>
             )}
@@ -241,7 +250,6 @@ export default function AddProductForm() {
               onChange={(e) => handleImageFile(e.target.files[0])}
             />
 
-            {/* Upload error */}
             {uploadError && (
               <p className="mt-2.5 text-xs text-red-500 flex items-center gap-1.5">
                 <X size={12} />
@@ -259,8 +267,8 @@ export default function AddProductForm() {
             <input
               type="text"
               placeholder="e.g. Sony WH-1000XM5 Headphones"
-              value={form.title}
-              onChange={(e) => handleChange("title", e.target.value)}
+              value={form.productTitle}
+              onChange={(e) => handleChange("productTitle", e.target.value)}
               required
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 transition"
             />
@@ -296,9 +304,10 @@ export default function AddProductForm() {
                 type="button"
                 onClick={() => setCatOpen((v) => !v)}
                 className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm transition
-                  ${form.category
-                    ? "border-emerald-300 text-gray-900 bg-white"
-                    : "border-gray-200 text-gray-400 bg-white hover:border-gray-300"
+                  ${
+                    form.category
+                      ? "border-emerald-300 text-gray-900 bg-white"
+                      : "border-gray-200 text-gray-400 bg-white hover:border-gray-300"
                   } focus:outline-none focus:ring-2 focus:ring-emerald-500/30`}
               >
                 {form.category || "Select a category"}
@@ -319,9 +328,10 @@ export default function AddProductForm() {
                         setCatOpen(false);
                       }}
                       className={`w-full text-left px-4 py-2.5 text-sm transition-colors
-                        ${form.category === cat
-                          ? "bg-emerald-50 text-emerald-700 font-medium"
-                          : "text-gray-700 hover:bg-gray-50"
+                        ${
+                          form.category === cat
+                            ? "bg-emerald-50 text-emerald-700 font-medium"
+                            : "text-gray-700 hover:bg-gray-50"
                         }`}
                     >
                       {cat}
@@ -345,13 +355,16 @@ export default function AddProductForm() {
                   type="button"
                   onClick={() => handleChange("condition", value)}
                   className={`flex flex-col gap-1 px-3 py-3 rounded-xl border text-left transition-all
-                    ${form.condition === value
-                      ? `${color} border`
-                      : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                    ${
+                      form.condition === value
+                        ? `${color} border`
+                        : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                     }`}
                 >
                   <span className="text-sm font-semibold">{label}</span>
-                  <span className="text-[11px] leading-tight opacity-70">{desc}</span>
+                  <span className="text-[11px] leading-tight opacity-70">
+                    {desc}
+                  </span>
                 </button>
               ))}
             </div>
@@ -392,8 +405,8 @@ export default function AddProductForm() {
                   min="1"
                   step="1"
                   placeholder="1"
-                  value={form.stock}
-                  onChange={(e) => handleChange("stock", e.target.value)}
+                  value={form.quantity}
+                  onChange={(e) => handleChange("quantity", e.target.value)}
                   required
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 transition"
                 />
@@ -426,7 +439,6 @@ export default function AddProductForm() {
               )}
             </button>
           </div>
-
         </form>
       </div>
     </div>

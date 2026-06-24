@@ -1,13 +1,17 @@
 import { baseUrl } from "./baseUrl";
 
 export const serverMutation = async (path, method, data) => {
-   const res = await fetch(`${baseUrl}${path}`, {
-      method: method,
-      headers: {
-         "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-   });
+  const res = await fetch(`${baseUrl}${path}`, {
+    method: method,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+
+  return res.json(); // ← was missing, caused silent failures
 };
 
 export const serverFetch = async (path) => {
