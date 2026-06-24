@@ -13,6 +13,7 @@ import {
   Layers,
   ImagePlus,
   ChevronDown,
+  Loader2,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -45,6 +46,30 @@ const CONDITIONS = [
   },
 ];
 
+const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+
+// ── Upload image file to ImgBB, returns the direct image URL ────────
+async function uploadToImgBB(file) {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await fetch(
+    `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
+    { method: "POST", body: formData }
+  );
+
+  if (!res.ok) throw new Error("ImgBB upload failed");
+
+  const data = await res.json();
+
+  if (!data.success) throw new Error(data.error?.message || "ImgBB upload failed");
+
+  // data.data.url        → direct image link  (use this for <img src>)
+  // data.data.display_url → same but always .png extension
+  // data.data.delete_url → one-click delete link
+  return data.data.url;
+}
+
 export default function AddProductForm() {
   const router = useRouter();
   const fileInputRef = useRef(null);
@@ -53,6 +78,8 @@ export default function AddProductForm() {
   const [imagePreview, setImagePreview] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const [form, setForm] = useState({
     title: "",
@@ -69,6 +96,11 @@ export default function AddProductForm() {
 
   const handleImageFile = (file) => {
     if (!file || !file.type.startsWith("image/")) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Image must be under 5MB.");
+      return;
+    }
+    setUploadError("");
     setImage(file);
     setImagePreview(URL.createObjectURL(file));
   };
@@ -82,18 +114,57 @@ export default function AddProductForm() {
   const removeImage = () => {
     setImage(null);
     setImagePreview(null);
+    setUploadError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // wire up your action here
-    console.log({ ...form, image });
+
+    if (!image) {
+      setUploadError("Please upload a product image.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setUploadError("");
+
+      // 1. Upload image → get hosted URL
+      const imageUrl = await uploadToImgBB(image);
+
+      // 2. Build the final product payload
+      const productData = {
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        condition: form.condition,
+        price: parseFloat(form.price),
+        stock: parseInt(form.stock, 10),
+        imageUrl,
+      };
+
+      console.log("✅ Product data ready:", productData);
+
+      // 3. TODO: send productData to your Express API
+      // await fetch(`${process.env.NEXT_PUBLIC_API}/products`, {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify(productData),
+      // });
+
+    } catch (err) {
+      console.error("Submit error:", err);
+      setUploadError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-2xl mx-auto">
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-1">
@@ -108,6 +179,7 @@ export default function AddProductForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+
           {/* ── Image upload ── */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
@@ -139,35 +211,24 @@ export default function AddProductForm() {
             ) : (
               <div
                 onDrop={handleDrop}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
                 onClick={() => fileInputRef.current?.click()}
                 className={`w-full aspect-video rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-3 cursor-pointer transition-all
-                  ${
-                    dragOver
-                      ? "border-emerald-400 bg-emerald-50"
-                      : "border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50/40"
+                  ${dragOver
+                    ? "border-emerald-400 bg-emerald-50"
+                    : "border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50/40"
                   }`}
               >
-                <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${dragOver ? "bg-emerald-100" : "bg-white border border-gray-200"}`}
-                >
-                  <Upload
-                    size={20}
-                    className={dragOver ? "text-emerald-500" : "text-gray-400"}
-                  />
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${dragOver ? "bg-emerald-100" : "bg-white border border-gray-200"}`}>
+                  <Upload size={20} className={dragOver ? "text-emerald-500" : "text-gray-400"} />
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-gray-700">
                     Drop your image here, or{" "}
                     <span className="text-emerald-600">browse</span>
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    PNG, JPG, WEBP — max 5MB
-                  </p>
+                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP — max 5MB</p>
                 </div>
               </div>
             )}
@@ -179,6 +240,14 @@ export default function AddProductForm() {
               className="hidden"
               onChange={(e) => handleImageFile(e.target.files[0])}
             />
+
+            {/* Upload error */}
+            {uploadError && (
+              <p className="mt-2.5 text-xs text-red-500 flex items-center gap-1.5">
+                <X size={12} />
+                {uploadError}
+              </p>
+            )}
           </div>
 
           {/* ── Title ── */}
@@ -227,10 +296,9 @@ export default function AddProductForm() {
                 type="button"
                 onClick={() => setCatOpen((v) => !v)}
                 className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm transition
-                  ${
-                    form.category
-                      ? "border-emerald-300 text-gray-900 bg-white"
-                      : "border-gray-200 text-gray-400 bg-white hover:border-gray-300"
+                  ${form.category
+                    ? "border-emerald-300 text-gray-900 bg-white"
+                    : "border-gray-200 text-gray-400 bg-white hover:border-gray-300"
                   } focus:outline-none focus:ring-2 focus:ring-emerald-500/30`}
               >
                 {form.category || "Select a category"}
@@ -251,10 +319,9 @@ export default function AddProductForm() {
                         setCatOpen(false);
                       }}
                       className={`w-full text-left px-4 py-2.5 text-sm transition-colors
-                        ${
-                          form.category === cat
-                            ? "bg-emerald-50 text-emerald-700 font-medium"
-                            : "text-gray-700 hover:bg-gray-50"
+                        ${form.category === cat
+                          ? "bg-emerald-50 text-emerald-700 font-medium"
+                          : "text-gray-700 hover:bg-gray-50"
                         }`}
                     >
                       {cat}
@@ -278,16 +345,13 @@ export default function AddProductForm() {
                   type="button"
                   onClick={() => handleChange("condition", value)}
                   className={`flex flex-col gap-1 px-3 py-3 rounded-xl border text-left transition-all
-                    ${
-                      form.condition === value
-                        ? `${color} border`
-                        : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                    ${form.condition === value
+                      ? `${color} border`
+                      : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                     }`}
                 >
                   <span className="text-sm font-semibold">{label}</span>
-                  <span className="text-[11px] leading-tight opacity-70">
-                    {desc}
-                  </span>
+                  <span className="text-[11px] leading-tight opacity-70">{desc}</span>
                 </button>
               ))}
             </div>
@@ -296,7 +360,6 @@ export default function AddProductForm() {
           {/* ── Price & Stock ── */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <div className="grid grid-cols-2 gap-4">
-              {/* Price */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
                   <DollarSign size={15} className="text-gray-400" />
@@ -319,7 +382,6 @@ export default function AddProductForm() {
                 </div>
               </div>
 
-              {/* Stock */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
                   <Layers size={15} className="text-gray-400" />
@@ -344,17 +406,27 @@ export default function AddProductForm() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              disabled={submitting}
+              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors shadow-sm"
+              disabled={submitting}
+              className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              List product
+              {submitting ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  Uploading…
+                </>
+              ) : (
+                "List product"
+              )}
             </button>
           </div>
+
         </form>
       </div>
     </div>
