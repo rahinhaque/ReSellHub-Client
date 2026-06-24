@@ -1,0 +1,1 @@
+export const baseUrl = NEXT_PUBLIC_API || "http://localhost:5000";
