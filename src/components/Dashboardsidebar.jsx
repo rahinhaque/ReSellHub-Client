@@ -35,25 +35,25 @@ const SELLER_MENU = [
     key: "add-product",
     label: "Add Product",
     icon: PackagePlus,
-    href: "/dashboard/add-product",
+    href: "/dashboard/seller/add-product",
   },
   {
     key: "my-products",
     label: "My Products",
     icon: Package,
-    href: "/dashboard/products",
+    href: "/dashboard/seller/products",
   },
   {
     key: "manage-orders",
     label: "Manage Orders",
     icon: ClipboardList,
-    href: "/dashboard/orders",
+    href: "/dashboard/seller/orders",
   },
   {
     key: "sales-analytics",
     label: "Sales Analytics",
     icon: BarChart2,
-    href: "/dashboard/analytics",
+    href: "/dashboard/seller/analytics",
   },
 ];
 
