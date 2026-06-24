@@ -139,6 +139,7 @@ export default function AddProductForm() {
         description: form.description,
         category: form.category,
         condition: form.condition,
+        price: parseFloat(form.price), // ← add this
         quantity: parseInt(form.quantity, 10),
         sellerEmail,
       };
