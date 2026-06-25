@@ -6,26 +6,28 @@ import { serverMutation } from "@/lib/api/server";
 
 const CATEGORIES = [
   "Electronics",
-  "Fashion",
-  "Furniture",
-  "Books",
-  "Sports",
-  "Toys",
-  "Vehicles",
-  "Home & Garden",
-  "Music",
-  "Other",
+  "Clothing & Fashion",
+  "Furniture & Home",
+  "Books & Media",
+  "Sports & Outdoors",
+  "Toys & Games",
 ];
-const CONDITIONS = ["New", "Like New", "Good", "Fair", "Poor"];
+
+const CONDITIONS = [
+  { value: "used", label: "Used" },
+  { value: "like_new", label: "Like New" },
+  { value: "refurbished", label: "Refurbished" },
+];
 
 export default function EditProductModal({ product, onClose, onUpdated }) {
   const [form, setForm] = useState({
-    productTitle: product.productTitle || "",
+    title: product.title || "",
     category: product.category || "",
     condition: product.condition || "",
     price: product.price || "",
     quantity: product.quantity || "",
     description: product.description || "",
+    status: product.status || "available",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,19 +37,16 @@ export default function EditProductModal({ product, onClose, onUpdated }) {
   };
 
   const handleSubmit = async () => {
-    if (!form.productTitle.trim()) {
+    if (!form.title.trim()) {
       setError("Product title is required.");
       return;
     }
     try {
       setLoading(true);
       setError("");
-      const updated = await serverMutation(
-        `/api/sellerProducts/${product._id}`,
-        "PUT",
-        form,
-      );
-      onUpdated({ ...product, ...form, ...updated });
+      await serverMutation(`/api/sellerProducts/${product._id}`, "PUT", form);
+      // Merge updated fields back into the original product object
+      onUpdated({ ...product, ...form });
     } catch (err) {
       setError("Failed to update. Please try again.");
     } finally {
@@ -60,9 +59,14 @@ export default function EditProductModal({ product, onClose, onUpdated }) {
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-800">
-            Edit Product
-          </h2>
+          <div>
+            <h2 className="text-base font-semibold text-gray-800">
+              Edit Product
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
+              {product.title}
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
@@ -73,11 +77,22 @@ export default function EditProductModal({ product, onClose, onUpdated }) {
 
         {/* Body */}
         <div className="overflow-y-auto px-6 py-4 flex flex-col gap-4">
+          {/* Cover image preview (read-only) */}
+          {product.images?.[0] && (
+            <div className="w-full h-36 rounded-xl overflow-hidden bg-gray-100">
+              <img
+                src={product.images[0]}
+                alt={product.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
           {/* Title */}
           <Field label="Product Title">
             <input
-              name="productTitle"
-              value={form.productTitle}
+              name="title"
+              value={form.title}
               onChange={handleChange}
               className={inputCls}
               placeholder="e.g. iPhone 13 Pro"
@@ -95,7 +110,9 @@ export default function EditProductModal({ product, onClose, onUpdated }) {
               >
                 <option value="">Select…</option>
                 {CATEGORIES.map((c) => (
-                  <option key={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
             </Field>
@@ -107,8 +124,10 @@ export default function EditProductModal({ product, onClose, onUpdated }) {
                 className={inputCls}
               >
                 <option value="">Select…</option>
-                {CONDITIONS.map((c) => (
-                  <option key={c}>{c}</option>
+                {CONDITIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </Field>
@@ -139,6 +158,20 @@ export default function EditProductModal({ product, onClose, onUpdated }) {
               />
             </Field>
           </div>
+
+          {/* Status */}
+          <Field label="Status">
+            <select
+              name="status"
+              value={form.status}
+              onChange={handleChange}
+              className={inputCls}
+            >
+              <option value="available">Available</option>
+              <option value="sold">Sold</option>
+              <option value="reserved">Reserved</option>
+            </select>
+          </Field>
 
           {/* Description */}
           <Field label="Description">
@@ -198,4 +231,4 @@ function Field({ label, children }) {
 }
 
 const inputCls =
-  "text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 transition-all w-full";
+  "text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 transition-all w-full bg-white";

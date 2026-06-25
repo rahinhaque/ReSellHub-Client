@@ -1,12 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { Pencil, Trash2, Tag, Clock, Package } from "lucide-react";
-
 import DeleteConfirmModal from "./Deleteconfirmmodal";
 import EditProductModal from "./Editproductmodal ";
-
 
 // ─── Condition pill styles ───────────────────────────────────────────────────
 const conditionStyles = {
@@ -33,8 +30,8 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
 
   const {
     _id,
-    productTitle,
-    productImage,
+    title,
+    images,
     price,
     category,
     condition,
@@ -42,19 +39,18 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
     createdAt,
   } = product;
 
-  const conditionKey = condition?.toLowerCase() || "good";
+  const coverImage = Array.isArray(images) ? images[0] : images;
+  const conditionKey = condition?.toLowerCase().replace("_", " ") || "good";
 
   return (
     <>
       <div className="group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-100 transition-all duration-200 flex gap-4 p-4 items-start">
         {/* Thumbnail */}
-        <div className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-gray-50">
-          <Image
-            src={productImage || "/placeholder-product.png"}
-            alt={productTitle}
-            fill
-            className="object-cover"
-            sizes="96px"
+        <div className="w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100">
+          <img
+            src={coverImage || "/placeholder-product.png"}
+            alt={title || "Product"}
+            className="w-full h-full object-cover"
           />
         </div>
 
@@ -62,7 +58,7 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           <div className="flex items-start justify-between gap-2">
             <h3 className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-emerald-700 transition-colors">
-              {productTitle}
+              {title || "Untitled product"}
             </h3>
 
             {/* Action buttons */}
@@ -88,7 +84,7 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
           <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
             <span className="flex items-center gap-1">
               <Tag size={11} />
-              {category}
+              {category || "—"}
             </span>
             <span className="text-gray-200">|</span>
             <span className="flex items-center gap-1">
@@ -109,7 +105,7 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
                 conditionStyles[conditionKey] || conditionStyles["good"]
               }`}
             >
-              {condition}
+              {conditionKey}
             </span>
             <span className="text-base font-bold text-emerald-600">
               {price ? `৳${Number(price).toLocaleString()}` : "No price set"}
@@ -131,7 +127,7 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
       )}
       {showDelete && (
         <DeleteConfirmModal
-          productTitle={productTitle}
+          productTitle={title}
           productId={_id}
           onClose={() => setShowDelete(false)}
           onDeleted={() => {
@@ -176,11 +172,11 @@ export default function ProductList({
 
   const filtered = products.filter((p) => {
     const matchSearch =
-      p.productTitle?.toLowerCase().includes(search.toLowerCase()) ||
+      p.title?.toLowerCase().includes(search.toLowerCase()) ||
       p.category?.toLowerCase().includes(search.toLowerCase());
     const matchCondition =
       filterCondition === "all" ||
-      p.condition?.toLowerCase() === filterCondition;
+      p.condition?.toLowerCase().replace("_", " ") === filterCondition;
     return matchSearch && matchCondition;
   });
 
