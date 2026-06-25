@@ -62,31 +62,31 @@ const BUYER_MENU = [
     key: "overview",
     label: "Dashboard Overview",
     icon: LayoutDashboard,
-    href: "/dashboard",
+    href: "/dashboard/buyer",
   },
   {
     key: "my-orders",
     label: "My Orders",
     icon: ShoppingBag,
-    href: "/dashboard/orders",
+    href: "/dashboard/buyer/orders",
   },
   {
     key: "wishlist",
     label: "Wishlist",
     icon: Heart,
-    href: "/dashboard/wishlist",
+    href: "/dashboard/buyer/wishlist",
   },
   {
     key: "payment-history",
     label: "Payment History",
     icon: CreditCard,
-    href: "/dashboard/payments",
+    href: "/dashboard/buyer/payments",
   },
   {
     key: "profile",
     label: "Profile Management",
     icon: UserCog,
-    href: "/dashboard/profile",
+    href: "/dashboard/buyer/profile",
   },
 ];
 
