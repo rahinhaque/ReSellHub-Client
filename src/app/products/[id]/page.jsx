@@ -2,12 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
 import { serverFetch } from "@/lib/api/server";
 import Link from "next/link";
 import {
-  ArrowLeft, Package, Tag, Clock, Layers,
-  Phone, Mail, User, BadgeCheck, ShoppingCart,
-  MessageCircle, Share2, Shield, ChevronLeft, ChevronRight,
+  ArrowLeft,
+  Package,
+  Tag,
+  Clock,
+  Layers,
+  Phone,
+  Mail,
+  User,
+  BadgeCheck,
+  ShoppingCart,
+  MessageCircle,
+  Share2,
+  Shield,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  Lock,
 } from "lucide-react";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -74,10 +89,17 @@ function Skeleton() {
 export default function ProductDetails() {
   const { id } = useParams();
   const router = useRouter();
+  const { data: session } = useSession();
+
+  const user = session?.user;
+  const role = user?.role ?? null; // "buyer" | "seller" | "admin" | null
+
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -99,42 +121,114 @@ export default function ProductDetails() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleWishlist = async () => {
+    if (!user) {
+      router.push("/Login");
+      return;
+    }
+    setWishlistLoading(true);
+    // TODO: wire to your wishlist API
+    // await toggleWishlist({ productId: id, userEmail: user.email });
+    setWishlisted((prev) => !prev);
+    setWishlistLoading(false);
+  };
+
   if (isLoading) return <Skeleton />;
 
-  if (!product) return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-        <Package size={28} className="text-gray-300" />
+  if (!product)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+          <Package size={28} className="text-gray-300" />
+        </div>
+        <p className="text-gray-500 text-sm">Product not found.</p>
+        <Link
+          href="/products"
+          className="text-sm text-emerald-600 hover:underline"
+        >
+          Browse all products
+        </Link>
       </div>
-      <p className="text-gray-500 text-sm">Product not found.</p>
-      <Link
-        href="/products"
-        className="text-sm text-emerald-600 hover:underline"
-      >
-        Browse all products
-      </Link>
-    </div>
-  );
+    );
 
-  const images = Array.isArray(product.images) && product.images.length > 0
-    ? product.images
-    : product.productImage
-    ? [product.productImage]
-    : [];
+  const images =
+    Array.isArray(product.images) && product.images.length > 0
+      ? product.images
+      : product.productImage
+        ? [product.productImage]
+        : [];
 
   const conditionKey = product.condition || "used";
   const statusKey = product.status || "available";
   const isSold = statusKey === "sold";
+  const isSeller = role === "seller";
+  const isBuyer = role === "buyer";
+  const isGuest = !user;
 
   const prevImage = () =>
     setActiveImage((i) => (i === 0 ? images.length - 1 : i - 1));
   const nextImage = () =>
     setActiveImage((i) => (i === images.length - 1 ? 0 : i + 1));
 
+  // ── CTA block logic ────────────────────────────────────────────────────────
+  const renderCTA = () => {
+    // Sold — everyone sees this
+    if (isSold) {
+      return (
+        <button
+          disabled
+          className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 text-gray-400 cursor-not-allowed"
+        >
+          <ShoppingCart size={16} />
+          This item is sold
+        </button>
+      );
+    }
+
+    // Seller — disabled with tooltip-style label
+    if (isSeller) {
+      return (
+        <div className="flex flex-col gap-2">
+          <button
+            disabled
+            className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+          >
+            <Lock size={15} />
+            Sellers can't purchase items
+          </button>
+          <p className="text-xs text-center text-gray-400">
+            Switch to a buyer account to make purchases.
+          </p>
+        </div>
+      );
+    }
+
+    // Guest — prompt to log in
+    if (isGuest) {
+      return (
+        <Link
+          href="/Login"
+          className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md transition-all"
+        >
+          <ShoppingCart size={16} />
+          Log in to Purchase
+        </Link>
+      );
+    }
+
+    // Buyer (or admin) — full CTA
+    return (
+      <button className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md transition-all">
+        <ShoppingCart size={16} />
+        Purchase Now
+      </button>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto flex flex-col gap-6">
-        {/* ── Breadcrumb / back ── */}
+        {/* ── Breadcrumb ── */}
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <Link href="/" className="hover:text-emerald-600 transition-colors">
             Home
@@ -180,6 +274,38 @@ export default function ProductDetails() {
                     </span>
                   </div>
                 )}
+
+                {/* Wishlist button — top-right of image */}
+                <button
+                  onClick={handleWishlist}
+                  disabled={wishlistLoading || isSeller}
+                  title={
+                    isSeller
+                      ? "Sellers can't add to wishlist"
+                      : wishlisted
+                        ? "Remove from wishlist"
+                        : "Add to wishlist"
+                  }
+                  className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center shadow transition-all
+                    ${
+                      isSeller
+                        ? "bg-white/60 cursor-not-allowed"
+                        : wishlisted
+                          ? "bg-red-50 border border-red-200 hover:bg-red-100"
+                          : "bg-white border border-gray-200 hover:border-red-300 hover:bg-red-50"
+                    }`}
+                >
+                  <Heart
+                    size={16}
+                    className={
+                      isSeller
+                        ? "text-gray-300"
+                        : wishlisted
+                          ? "text-red-500 fill-red-500"
+                          : "text-gray-400"
+                    }
+                  />
+                </button>
 
                 {/* Prev / Next arrows */}
                 {images.length > 1 && (
@@ -311,19 +437,10 @@ export default function ProductDetails() {
 
             {/* CTA buttons */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-3">
-              <button
-                disabled={isSold}
-                className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-                  isSold
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md"
-                }`}
-              >
-                <ShoppingCart size={16} />
-                {isSold ? "This item is sold" : "Purchase Now"}
-              </button>
+              {renderCTA()}
 
-              {!isSold && product.sellerInfo?.phone && (
+              {/* WhatsApp — only buyers/guests when not sold */}
+              {!isSold && !isSeller && product.sellerInfo?.phone && (
                 <a
                   href={`https://wa.me/${product.sellerInfo.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
                     `Hi! I'm interested in your listing: ${product.title}`,
@@ -337,7 +454,8 @@ export default function ProductDetails() {
                 </a>
               )}
 
-              {!isSold && product.sellerInfo?.email && (
+              {/* Email — only buyers/guests when not sold */}
+              {!isSold && !isSeller && product.sellerInfo?.email && (
                 <a
                   href={`mailto:${product.sellerInfo.email}?subject=${encodeURIComponent(
                     `Interested in: ${product.title}`,
@@ -347,6 +465,26 @@ export default function ProductDetails() {
                   <Mail size={16} />
                   Contact Seller via Email
                 </a>
+              )}
+
+              {/* Wishlist row — buyers and guests only */}
+              {!isSeller && !isSold && (
+                <button
+                  onClick={handleWishlist}
+                  disabled={wishlistLoading}
+                  className={`w-full py-2.5 rounded-xl text-sm font-medium border flex items-center justify-center gap-2 transition-all
+                    ${
+                      wishlisted
+                        ? "border-red-200 text-red-500 bg-red-50 hover:bg-red-100"
+                        : "border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-500 hover:bg-red-50"
+                    }`}
+                >
+                  <Heart
+                    size={15}
+                    className={wishlisted ? "fill-red-500 text-red-500" : ""}
+                  />
+                  {wishlisted ? "Saved to Wishlist" : "Add to Wishlist"}
+                </button>
               )}
             </div>
 
@@ -377,7 +515,6 @@ export default function ProductDetails() {
                       <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
                         <Mail size={13} className="text-blue-500" />
                       </div>
-
                       <a
                         href={`mailto:${product.sellerInfo.email}`}
                         className="text-gray-500 hover:text-blue-600 transition-colors text-xs"
@@ -386,12 +523,12 @@ export default function ProductDetails() {
                       </a>
                     </div>
                   )}
+
                   {product.sellerInfo.phone && (
                     <div className="flex items-center gap-2.5 text-sm">
                       <div className="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
                         <Phone size={13} className="text-emerald-500" />
                       </div>
-
                       <a
                         href={`tel:${product.sellerInfo.phone}`}
                         className="text-gray-500 hover:text-emerald-600 transition-colors text-xs"
