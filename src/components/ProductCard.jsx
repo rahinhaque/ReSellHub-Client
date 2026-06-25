@@ -5,13 +5,16 @@ import { Pencil, Trash2, Tag, Clock, Package } from "lucide-react";
 import DeleteConfirmModal from "./Deleteconfirmmodal";
 import EditProductModal from "./Editproductmodal ";
 
-// ─── Condition pill styles ───────────────────────────────────────────────────
 const conditionStyles = {
-  new: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  "like new": "bg-teal-50 text-teal-700 border border-teal-200",
-  good: "bg-green-50 text-green-700 border border-green-200",
-  fair: "bg-yellow-50 text-yellow-700 border border-yellow-200",
-  poor: "bg-red-50 text-red-600 border border-red-200",
+  used: "bg-orange-50 text-orange-700 border border-orange-200",
+  like_new: "bg-teal-50 text-teal-700 border border-teal-200",
+  refurbished: "bg-blue-50 text-blue-700 border border-blue-200",
+};
+
+const conditionLabels = {
+  used: "Used",
+  like_new: "Like New",
+  refurbished: "Refurbished",
 };
 
 function timeAgo(dateStr) {
@@ -23,42 +26,64 @@ function timeAgo(dateStr) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
+// Safely extract cover image from any possible shape
+function getCoverImage(product) {
+  // New schema: images is an array
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    return product.images[0];
+  }
+  // images might be a plain string (edge case)
+  if (typeof product.images === "string" && product.images.length > 0) {
+    return product.images;
+  }
+  // Old schema fallback
+  if (
+    typeof product.productImage === "string" &&
+    product.productImage.length > 0
+  ) {
+    return product.productImage;
+  }
+  return null;
+}
+
 // ─── Single management card ──────────────────────────────────────────────────
 export function ProductCard({ product, onUpdated, onDeleted }) {
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
-  const {
-    _id,
-    title,
-    images,
-    price,
-    category,
-    condition,
-    quantity,
-    createdAt,
-  } = product;
+  const { _id, title, price, category, condition, quantity, createdAt } =
+    product;
 
-  const coverImage = Array.isArray(images) ? images[0] : images;
-  const conditionKey = condition?.toLowerCase().replace("_", " ") || "good";
+  const displayTitle = title || product.productTitle || "Untitled product";
+  const coverImage = getCoverImage(product);
+  const conditionKey = condition || "used";
 
   return (
     <>
       <div className="group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-100 transition-all duration-200 flex gap-4 p-4 items-start">
         {/* Thumbnail */}
-        <div className="w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100">
-          <img
-            src={coverImage || "/placeholder-product.png"}
-            alt={title || "Product"}
-            className="w-full h-full object-cover"
-          />
+        <div className="w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-100">
+          {coverImage && !imgError ? (
+            <img
+              src={coverImage}
+              alt={displayTitle}
+              className="w-full h-full object-cover"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-1">
+              <Package size={22} className="text-gray-300" />
+              <span className="text-[10px] text-gray-300">No image</span>
+            </div>
+          )}
         </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0 flex flex-col gap-1.5">
           <div className="flex items-start justify-between gap-2">
             <h3 className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-emerald-700 transition-colors">
-              {title || "Untitled product"}
+              {displayTitle}
             </h3>
 
             {/* Action buttons */}
@@ -101,11 +126,11 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
           {/* Bottom row: condition + price */}
           <div className="flex items-center justify-between mt-1">
             <span
-              className={`text-xs font-medium px-2.5 py-0.5 rounded-full capitalize ${
-                conditionStyles[conditionKey] || conditionStyles["good"]
+              className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
+                conditionStyles[conditionKey] || conditionStyles["used"]
               }`}
             >
-              {conditionKey}
+              {conditionLabels[conditionKey] || conditionKey}
             </span>
             <span className="text-base font-bold text-emerald-600">
               {price ? `৳${Number(price).toLocaleString()}` : "No price set"}
@@ -127,7 +152,7 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
       )}
       {showDelete && (
         <DeleteConfirmModal
-          productTitle={title}
+          productTitle={displayTitle}
           productId={_id}
           onClose={() => setShowDelete(false)}
           onDeleted={() => {
@@ -168,15 +193,15 @@ export default function ProductList({
   const [search, setSearch] = useState("");
   const [filterCondition, setFilterCondition] = useState("all");
 
-  const conditions = ["all", "new", "like new", "good", "fair", "poor"];
+  const conditions = ["all", "used", "like_new", "refurbished"];
 
   const filtered = products.filter((p) => {
+    const name = p.title || p.productTitle || "";
     const matchSearch =
-      p.title?.toLowerCase().includes(search.toLowerCase()) ||
+      name.toLowerCase().includes(search.toLowerCase()) ||
       p.category?.toLowerCase().includes(search.toLowerCase());
     const matchCondition =
-      filterCondition === "all" ||
-      p.condition?.toLowerCase().replace("_", " ") === filterCondition;
+      filterCondition === "all" || p.condition === filterCondition;
     return matchSearch && matchCondition;
   });
 
@@ -202,7 +227,7 @@ export default function ProductList({
                   : "bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-600"
               }`}
             >
-              {c}
+              {c.replace("_", " ")}
             </button>
           ))}
         </div>
