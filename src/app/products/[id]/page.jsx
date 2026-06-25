@@ -9,6 +9,7 @@ import {
   removeFromWishlist,
   getWishlistByUser,
 } from "@/lib/api/buyer/wishlist/action";
+import PurchaseButton from "@/components/PurchaseButton";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -20,7 +21,6 @@ import {
   Mail,
   User,
   BadgeCheck,
-  ShoppingCart,
   MessageCircle,
   Share2,
   Shield,
@@ -232,7 +232,7 @@ export default function ProductDetails() {
           disabled
           className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 text-gray-400 cursor-not-allowed"
         >
-          <ShoppingCart size={16} />
+          <Package size={16} />
           This item is sold
         </button>
       );
@@ -261,18 +261,13 @@ export default function ProductDetails() {
           href="/Login"
           className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md transition-all"
         >
-          <ShoppingCart size={16} />
+          <Package size={16} />
           Log in to Purchase
         </Link>
       );
     }
 
-    return (
-      <button className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md transition-all">
-        <ShoppingCart size={16} />
-        Purchase Now
-      </button>
-    );
+    return <PurchaseButton product={product} />;
   };
 
   return (
