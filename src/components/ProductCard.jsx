@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Tag, Clock, Package } from "lucide-react";
+import { Pencil, Trash2, Tag, Clock, Package, Eye } from "lucide-react"; // ← add Eye
+import Link from "next/link"; // ← add Link
 import DeleteConfirmModal from "./Deleteconfirmmodal";
 import EditProductModal from "./Editproductmodal ";
 
@@ -87,7 +88,15 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
             </h3>
 
             {/* Action buttons */}
+            {/* Action buttons */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
+              <Link
+                href={`/dashboard/seller/products/${_id}`}
+                className="flex items-center gap-1.5 text-xs font-medium text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-500 hover:text-white hover:border-blue-500 px-3 py-1.5 rounded-lg transition-all duration-150"
+              >
+                <Eye size={12} />
+                Details
+              </Link>
               <button
                 onClick={() => setShowEdit(true)}
                 className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 border border-emerald-200 bg-emerald-50 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 px-3 py-1.5 rounded-lg transition-all duration-150"
