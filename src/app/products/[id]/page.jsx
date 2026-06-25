@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { serverFetch } from "@/lib/api/server";
+import {
+  addToWishlist,
+  removeFromWishlist,
+  getWishlistByUser,
+} from "@/lib/api/buyer/wishlist/action";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -25,7 +30,6 @@ import {
   Lock,
 } from "lucide-react";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
 const conditionStyles = {
   used: "bg-orange-50 text-orange-700 border border-orange-200",
   like_new: "bg-teal-50 text-teal-700 border border-teal-200",
@@ -53,7 +57,6 @@ function timeAgo(dateStr) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
 function Skeleton() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 animate-pulse">
@@ -85,14 +88,13 @@ function Skeleton() {
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function ProductDetails() {
   const { id } = useParams();
   const router = useRouter();
   const { data: session } = useSession();
 
   const user = session?.user;
-  const role = user?.role ?? null; // "buyer" | "seller" | "admin" | null
+  const role = user?.role ?? null;
 
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,6 +102,7 @@ export default function ProductDetails() {
   const [copied, setCopied] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [wishlistId, setWishlistId] = useState(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -115,6 +118,31 @@ export default function ProductDetails() {
     fetchProduct();
   }, [id]);
 
+  useEffect(() => {
+    const loadWishlistState = async () => {
+      if (!user?.email || !product?._id) return;
+
+      try {
+        const items = await getWishlistByUser(user.email);
+        const found = Array.isArray(items)
+          ? items.find((item) => String(item.productId) === String(product._id))
+          : null;
+
+        if (found) {
+          setWishlisted(true);
+          setWishlistId(found._id);
+        } else {
+          setWishlisted(false);
+          setWishlistId(null);
+        }
+      } catch (error) {
+        console.error("Failed to load wishlist state:", error);
+      }
+    };
+
+    loadWishlistState();
+  }, [user?.email, product?._id]);
+
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
@@ -126,11 +154,39 @@ export default function ProductDetails() {
       router.push("/Login");
       return;
     }
+
+    if (role === "seller" || !product) return;
+
     setWishlistLoading(true);
-    // TODO: wire to your wishlist API
-    // await toggleWishlist({ productId: id, userEmail: user.email });
-    setWishlisted((prev) => !prev);
-    setWishlistLoading(false);
+    try {
+      if (wishlisted && wishlistId) {
+        await removeFromWishlist(wishlistId);
+        setWishlisted(false);
+        setWishlistId(null);
+        return;
+      }
+
+      const payload = {
+        productId: String(product._id),
+        userId: user.id || "",
+        userEmail: user.email || "",
+        title: product.title || product.productTitle || "Untitled product",
+        price: Number(product.price) || 0,
+        image:
+          Array.isArray(product.images) && product.images.length > 0
+            ? product.images[0]
+            : product.productImage || "",
+        sellerInfo: product.sellerInfo || null,
+      };
+
+      const result = await addToWishlist(payload);
+      setWishlisted(true);
+      if (result?._id) setWishlistId(result._id);
+    } catch (error) {
+      console.error("Wishlist update failed:", error);
+    } finally {
+      setWishlistLoading(false);
+    }
   };
 
   if (isLoading) return <Skeleton />;
@@ -162,7 +218,6 @@ export default function ProductDetails() {
   const statusKey = product.status || "available";
   const isSold = statusKey === "sold";
   const isSeller = role === "seller";
-  const isBuyer = role === "buyer";
   const isGuest = !user;
 
   const prevImage = () =>
@@ -170,9 +225,7 @@ export default function ProductDetails() {
   const nextImage = () =>
     setActiveImage((i) => (i === images.length - 1 ? 0 : i + 1));
 
-  // ── CTA block logic ────────────────────────────────────────────────────────
   const renderCTA = () => {
-    // Sold — everyone sees this
     if (isSold) {
       return (
         <button
@@ -185,7 +238,6 @@ export default function ProductDetails() {
       );
     }
 
-    // Seller — disabled with tooltip-style label
     if (isSeller) {
       return (
         <div className="flex flex-col gap-2">
@@ -203,7 +255,6 @@ export default function ProductDetails() {
       );
     }
 
-    // Guest — prompt to log in
     if (isGuest) {
       return (
         <Link
@@ -216,7 +267,6 @@ export default function ProductDetails() {
       );
     }
 
-    // Buyer (or admin) — full CTA
     return (
       <button className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md transition-all">
         <ShoppingCart size={16} />
@@ -228,7 +278,6 @@ export default function ProductDetails() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto flex flex-col gap-6">
-        {/* ── Breadcrumb ── */}
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <Link href="/" className="hover:text-emerald-600 transition-colors">
             Home
@@ -246,12 +295,9 @@ export default function ProductDetails() {
           </span>
         </div>
 
-        {/* ── Main grid ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* LEFT — Image gallery */}
           <div className="flex flex-col gap-3">
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              {/* Main image */}
               <div className="relative w-full h-80 bg-gray-100">
                 {images.length > 0 ? (
                   <img
@@ -266,7 +312,6 @@ export default function ProductDetails() {
                   </div>
                 )}
 
-                {/* Sold overlay */}
                 {isSold && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                     <span className="text-white text-2xl font-bold tracking-widest rotate-[-15deg] border-4 border-white px-6 py-2 rounded-xl opacity-90">
@@ -275,10 +320,9 @@ export default function ProductDetails() {
                   </div>
                 )}
 
-                {/* Wishlist button — top-right of image */}
                 <button
                   onClick={handleWishlist}
-                  disabled={wishlistLoading || isSeller}
+                  disabled={wishlistLoading || isSeller || isSold}
                   title={
                     isSeller
                       ? "Sellers can't add to wishlist"
@@ -288,7 +332,7 @@ export default function ProductDetails() {
                   }
                   className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center shadow transition-all
                     ${
-                      isSeller
+                      isSeller || isSold
                         ? "bg-white/60 cursor-not-allowed"
                         : wishlisted
                           ? "bg-red-50 border border-red-200 hover:bg-red-100"
@@ -298,7 +342,7 @@ export default function ProductDetails() {
                   <Heart
                     size={16}
                     className={
-                      isSeller
+                      isSeller || isSold
                         ? "text-gray-300"
                         : wishlisted
                           ? "text-red-500 fill-red-500"
@@ -307,7 +351,6 @@ export default function ProductDetails() {
                   />
                 </button>
 
-                {/* Prev / Next arrows */}
                 {images.length > 1 && (
                   <>
                     <button
@@ -325,7 +368,6 @@ export default function ProductDetails() {
                   </>
                 )}
 
-                {/* Image counter */}
                 {images.length > 1 && (
                   <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">
                     {activeImage + 1} / {images.length}
@@ -333,7 +375,6 @@ export default function ProductDetails() {
                 )}
               </div>
 
-              {/* Thumbnail strip */}
               {images.length > 1 && (
                 <div className="flex gap-2 p-3 overflow-x-auto">
                   {images.map((img, i) => (
@@ -357,7 +398,6 @@ export default function ProductDetails() {
               )}
             </div>
 
-            {/* Trust badges */}
             <div className="bg-white rounded-2xl border border-gray-100 p-4">
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <div className="flex items-center gap-1.5">
@@ -373,9 +413,7 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          {/* RIGHT — Product info + actions */}
           <div className="flex flex-col gap-4">
-            {/* Title, price, badges */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-3">
               <div className="flex items-start justify-between gap-2">
                 <h1 className="text-lg font-bold text-gray-800 leading-snug flex-1">
@@ -397,26 +435,23 @@ export default function ProductDetails() {
                 <p className="text-xs text-emerald-600 -mt-1">Link copied!</p>
               )}
 
-              {/* Price */}
               <div className="text-3xl font-bold text-emerald-600">
                 ৳{Number(product.price).toLocaleString()}
               </div>
 
-              {/* Badges */}
               <div className="flex flex-wrap gap-2">
                 <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded-full border ${conditionStyles[conditionKey] || conditionStyles["used"]}`}
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full border ${conditionStyles[conditionKey] || conditionStyles.used}`}
                 >
                   {conditionLabels[conditionKey] || conditionKey}
                 </span>
                 <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded-full border capitalize ${statusStyles[statusKey] || statusStyles["available"]}`}
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full border capitalize ${statusStyles[statusKey] || statusStyles.available}`}
                 >
                   {statusKey}
                 </span>
               </div>
 
-              {/* Meta */}
               <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-400 pt-2 border-t border-gray-50">
                 <span className="flex items-center gap-1.5">
                   <Tag size={12} />
@@ -435,11 +470,9 @@ export default function ProductDetails() {
               </div>
             </div>
 
-            {/* CTA buttons */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-3">
               {renderCTA()}
 
-              {/* WhatsApp — only buyers/guests when not sold */}
               {!isSold && !isSeller && product.sellerInfo?.phone && (
                 <a
                   href={`https://wa.me/${product.sellerInfo.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
@@ -454,7 +487,6 @@ export default function ProductDetails() {
                 </a>
               )}
 
-              {/* Email — only buyers/guests when not sold */}
               {!isSold && !isSeller && product.sellerInfo?.email && (
                 <a
                   href={`mailto:${product.sellerInfo.email}?subject=${encodeURIComponent(
@@ -467,17 +499,15 @@ export default function ProductDetails() {
                 </a>
               )}
 
-              {/* Wishlist row — buyers and guests only */}
               {!isSeller && !isSold && (
                 <button
                   onClick={handleWishlist}
                   disabled={wishlistLoading}
-                  className={`w-full py-2.5 rounded-xl text-sm font-medium border flex items-center justify-center gap-2 transition-all
-                    ${
-                      wishlisted
-                        ? "border-red-200 text-red-500 bg-red-50 hover:bg-red-100"
-                        : "border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-500 hover:bg-red-50"
-                    }`}
+                  className={`w-full py-2.5 rounded-xl text-sm font-medium border flex items-center justify-center gap-2 transition-all ${
+                    wishlisted
+                      ? "border-red-200 text-red-500 bg-red-50 hover:bg-red-100"
+                      : "border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-500 hover:bg-red-50"
+                  }`}
                 >
                   <Heart
                     size={15}
@@ -488,7 +518,6 @@ export default function ProductDetails() {
               )}
             </div>
 
-            {/* Seller info card */}
             {product.sellerInfo && (
               <div className="bg-white rounded-2xl border border-gray-100 p-5">
                 <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
@@ -543,7 +572,6 @@ export default function ProductDetails() {
           </div>
         </div>
 
-        {/* ── Description ── */}
         {product.description && (
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
@@ -556,7 +584,6 @@ export default function ProductDetails() {
           </div>
         )}
 
-        {/* ── Back link ── */}
         <button
           onClick={() => router.back()}
           className="flex items-center gap-2 text-sm text-gray-400 hover:text-emerald-600 transition-colors w-fit pb-6"
