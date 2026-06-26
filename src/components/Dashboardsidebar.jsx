@@ -95,7 +95,7 @@ const ADMIN_MENU = [
     key: "overview",
     label: "Dashboard Overview",
     icon: LayoutDashboard,
-    href: "/dashboard",
+    href: "/dashboard/admin",
   },
   {
     key: "manage-users",
