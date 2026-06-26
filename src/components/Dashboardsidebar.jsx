@@ -101,25 +101,25 @@ const ADMIN_MENU = [
     key: "manage-users",
     label: "Manage Users",
     icon: Users,
-    href: "/dashboard/users",
+    href: "/dashboard/admin/users",
   },
   {
     key: "manage-products",
     label: "Manage Products",
     icon: Package,
-    href: "/dashboard/products",
+    href: "/dashboard/admin/products",
   },
   {
     key: "manage-orders",
     label: "Manage Orders",
     icon: ClipboardList,
-    href: "/dashboard/orders",
+    href: "/dashboard/admin/orders",
   },
   {
     key: "platform-analytics",
     label: "Platform Analytics",
     icon: TrendingUp,
-    href: "/dashboard/analytics",
+    href: "/dashboard/admin/analytics",
   },
 ];
 

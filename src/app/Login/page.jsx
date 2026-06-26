@@ -1,17 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { RefreshCw, Mail, Eye, EyeOff, ArrowRight, Chrome } from "lucide-react";
+import { RefreshCw, Mail, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { signIn } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
+// Centralized so the "blocked" copy is identical everywhere it can surface:
+// the middleware redirect (?blocked=1) and the sign-in error path.
+const BLOCKED_MESSAGE =
+  "Your account has been blocked. Please contact support.";
+
+// better-auth's thrown databaseHooks error sometimes reaches the client as
+// "Your account has been blocked..." verbatim, but depending on version it
+// can also come back wrapped (e.g. prefixed, or just the generic
+// "Failed to create session"/500 text with the real reason only in server
+// logs). Checking for "blocked" case-insensitively, and falling back to
+// checking error.code, makes this resilient to either shape instead of
+// relying on an exact string match.
+function isBlockedError(error) {
+  if (!error) return false;
+  const haystack = `${error.message || ""} ${error.code || ""}`.toLowerCase();
+  return haystack.includes("blocked");
+}
+
 export default function LoginPage() {
   const router = useRouter();
+
+  const searchParams = useSearchParams();
+
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPass, setShowPass] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("blocked") === "1") {
+      setErrors({ form: BLOCKED_MESSAGE });
+    }
+  }, [searchParams]);
 
   const set = (key, val) => {
     setForm((f) => ({ ...f, [key]: val }));
@@ -28,6 +56,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const errs = validate();
     if (Object.keys(errs).length) {
       setErrors(errs);
@@ -35,20 +64,26 @@ export default function LoginPage() {
     }
 
     setLoading(true);
+    setErrors({});
+
     try {
-      const { data, error } = await signIn.email({
+      const { error } = await signIn.email({
         email: form.email,
         password: form.password,
         callbackURL: "/",
       });
 
       if (error) {
-        setErrors({ form: error.message ?? "Invalid email or password." });
+        setErrors({
+          form: isBlockedError(error)
+            ? BLOCKED_MESSAGE
+            : error.message || "Invalid email or password.",
+        });
         return;
       }
 
       router.push("/");
-    } catch (err) {
+    } catch {
       setErrors({ form: "Something went wrong. Please try again." });
     } finally {
       setLoading(false);
@@ -206,15 +241,15 @@ export default function LoginPage() {
                 )}
               </div>
 
-              {/* Form-level error */}
+              {/* Form-level error — blocked users see a distinct red banner */}
               {errors.form && (
-                <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+                <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
                   <svg
                     width="15"
                     height="15"
                     viewBox="0 0 15 15"
                     fill="none"
-                    className="shrink-0"
+                    className="shrink-0 mt-0.5"
                   >
                     <circle
                       cx="7.5"
