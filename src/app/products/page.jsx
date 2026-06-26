@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { serverFetch } from "@/lib/api/server";
 import Link from "next/link";
 import {
@@ -11,11 +11,9 @@ import {
   Clock,
   ChevronDown,
   X,
-  Loader2,
   ArrowLeft,
 } from "lucide-react";
 
-// ── Constants ────────────────────────────────────────────────────────────────
 const CATEGORIES = [
   "All",
   "Electronics",
@@ -60,14 +58,9 @@ function timeAgo(dateStr) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-// ── Product Card ─────────────────────────────────────────────────────────────
 function ProductCard({ product }) {
   const [imgError, setImgError] = useState(false);
-
-  const coverImage = Array.isArray(product.images)
-    ? product.images[0]
-    : product.productImage || null;
-
+  const coverImage = Array.isArray(product.images) ? product.images[0] : null;
   const conditionKey = product.condition || "used";
 
   return (
@@ -75,7 +68,6 @@ function ProductCard({ product }) {
       href={`/products/${product._id}`}
       className="group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-100 transition-all duration-200 flex flex-col overflow-hidden"
     >
-      {/* Image */}
       <div className="w-full h-48 bg-gray-100 overflow-hidden">
         {coverImage && !imgError ? (
           <img
@@ -92,7 +84,6 @@ function ProductCard({ product }) {
         )}
       </div>
 
-      {/* Info */}
       <div className="p-4 flex flex-col gap-2 flex-1">
         <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-emerald-700 transition-colors leading-snug">
           {product.title || "Untitled product"}
@@ -121,7 +112,6 @@ function ProductCard({ product }) {
           </span>
         </div>
 
-        {/* Seller */}
         {product.sellerInfo?.name && (
           <p className="text-xs text-gray-400 truncate">
             by{" "}
@@ -135,7 +125,6 @@ function ProductCard({ product }) {
   );
 }
 
-// ── Skeleton Card ─────────────────────────────────────────────────────────────
 function SkeletonCard() {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden animate-pulse">
@@ -152,7 +141,6 @@ function SkeletonCard() {
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AllProducts() {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -162,6 +150,18 @@ export default function AllProducts() {
   const [condition, setCondition] = useState("");
   const [sort, setSort] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef(null);
+
+  // Close sort dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   // Fetch whenever filters change
   useEffect(() => {
@@ -175,7 +175,17 @@ export default function AllProducts() {
         if (sort !== "newest") params.set("sort", sort);
 
         const data = await serverFetch(`/api/products?${params.toString()}`);
-        setProducts(Array.isArray(data) ? data : []);
+        const raw = Array.isArray(data) ? data : [];
+
+        // Fix duplicate key error — deduplicate by _id
+        const seen = new Set();
+        const deduped = raw.filter((p) => {
+          if (seen.has(p._id)) return false;
+          seen.add(p._id);
+          return true;
+        });
+
+        setProducts(deduped);
       } catch (err) {
         console.error("Failed to fetch products:", err);
         setProducts([]);
@@ -197,6 +207,13 @@ export default function AllProducts() {
     setSearch("");
   };
 
+  const clearAll = () => {
+    setCategory("All");
+    setCondition("");
+    clearSearch();
+    setSort("newest");
+  };
+
   const activeFilters = [
     category !== "All" && { label: category, clear: () => setCategory("All") },
     condition && {
@@ -204,14 +221,17 @@ export default function AllProducts() {
       clear: () => setCondition(""),
     },
     search && { label: `"${search}"`, clear: clearSearch },
+    sort !== "newest" && {
+      label: SORT_OPTIONS.find((s) => s.value === sort)?.label,
+      clear: () => setSort("newest"),
+    },
   ].filter(Boolean);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ── Hero / Search bar ── */}
+      {/* Hero / Search */}
       <div className="bg-white border-b border-gray-100 px-4 py-8">
         <div className="max-w-5xl mx-auto">
-          {/* ── Back to home ── */}
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-emerald-600 transition-colors mb-4"
@@ -226,7 +246,6 @@ export default function AllProducts() {
             {isLoading ? "Loading…" : `${products.length} products available`}
           </p>
 
-          {/* Search */}
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-1">
               <Search
@@ -261,7 +280,7 @@ export default function AllProducts() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-5">
-        {/* ── Filters row ── */}
+        {/* Filters row */}
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
           {/* Category pills */}
           <div className="flex gap-2 flex-wrap">
@@ -281,7 +300,7 @@ export default function AllProducts() {
           </div>
 
           <div className="flex gap-2 flex-shrink-0">
-            {/* Condition filter */}
+            {/* Condition */}
             <select
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
@@ -294,8 +313,8 @@ export default function AllProducts() {
               ))}
             </select>
 
-            {/* Sort dropdown */}
-            <div className="relative">
+            {/* Sort */}
+            <div className="relative" ref={sortRef}>
               <button
                 onClick={() => setSortOpen((v) => !v)}
                 className="flex items-center gap-1.5 text-xs border border-gray-200 rounded-xl px-3 py-1.5 text-gray-600 bg-white hover:border-gray-300 transition"
@@ -331,7 +350,7 @@ export default function AllProducts() {
           </div>
         </div>
 
-        {/* ── Active filter chips ── */}
+        {/* Active filter chips */}
         {activeFilters.length > 0 && (
           <div className="flex gap-2 flex-wrap">
             {activeFilters.map((f, i) => (
@@ -346,11 +365,7 @@ export default function AllProducts() {
               </span>
             ))}
             <button
-              onClick={() => {
-                setCategory("All");
-                setCondition("");
-                clearSearch();
-              }}
+              onClick={clearAll}
               className="text-xs text-gray-400 hover:text-red-500 transition-colors px-1"
             >
               Clear all
@@ -358,7 +373,7 @@ export default function AllProducts() {
           </div>
         )}
 
-        {/* ── Grid ── */}
+        {/* Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -372,11 +387,7 @@ export default function AllProducts() {
             </div>
             <p className="text-sm text-gray-500">No products found.</p>
             <button
-              onClick={() => {
-                setCategory("All");
-                setCondition("");
-                clearSearch();
-              }}
+              onClick={clearAll}
               className="text-xs text-emerald-600 hover:underline"
             >
               Clear filters
