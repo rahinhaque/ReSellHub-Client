@@ -28,7 +28,9 @@ import {
   ChevronRight,
   Heart,
   Lock,
+  Flag,
 } from "lucide-react";
+import ReportModal from "@/components/ReportModal";
 
 const conditionStyles = {
   used: "bg-orange-50 text-orange-700 border border-orange-200",
@@ -103,6 +105,7 @@ export default function ProductDetails() {
   const [wishlisted, setWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [wishlistId, setWishlistId] = useState(null);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -187,6 +190,15 @@ export default function ProductDetails() {
     } finally {
       setWishlistLoading(false);
     }
+  };
+
+  const openReportModal = () => {
+    if (!user) {
+      router.push("/Login");
+      return;
+    }
+    if (role === "seller") return;
+    setShowReportModal(true);
   };
 
   if (isLoading) return <Skeleton />;
@@ -325,14 +337,13 @@ export default function ProductDetails() {
                         ? "Remove from wishlist"
                         : "Add to wishlist"
                   }
-                  className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center shadow transition-all
-                    ${
-                      isSeller || isSold
-                        ? "bg-white/60 cursor-not-allowed"
-                        : wishlisted
-                          ? "bg-red-50 border border-red-200 hover:bg-red-100"
-                          : "bg-white border border-gray-200 hover:border-red-300 hover:bg-red-50"
-                    }`}
+                  className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center shadow transition-all ${
+                    isSeller || isSold
+                      ? "bg-white/60 cursor-not-allowed"
+                      : wishlisted
+                        ? "bg-red-50 border border-red-200 hover:bg-red-100"
+                        : "bg-white border border-gray-200 hover:border-red-300 hover:bg-red-50"
+                  }`}
                 >
                   <Heart
                     size={16}
@@ -345,6 +356,24 @@ export default function ProductDetails() {
                     }
                   />
                 </button>
+
+                {user && !isSeller && (
+                  <button
+                    onClick={openReportModal}
+                    className="absolute bottom-3 right-3 py-2 px-3 rounded-xl text-xs font-medium border border-gray-100 bg-white/95 text-gray-500 hover:border-red-200 hover:text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                  >
+                    <Flag size={12} />
+                    Report listing
+                  </button>
+                )}
+
+                {showReportModal && (
+                  <ReportModal
+                    product={product}
+                    user={user}
+                    onClose={() => setShowReportModal(false)}
+                  />
+                )}
 
                 {images.length > 1 && (
                   <>
@@ -436,12 +465,16 @@ export default function ProductDetails() {
 
               <div className="flex flex-wrap gap-2">
                 <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded-full border ${conditionStyles[conditionKey] || conditionStyles.used}`}
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full border ${
+                    conditionStyles[conditionKey] || conditionStyles.used
+                  }`}
                 >
                   {conditionLabels[conditionKey] || conditionKey}
                 </span>
                 <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded-full border capitalize ${statusStyles[statusKey] || statusStyles.available}`}
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full border capitalize ${
+                    statusStyles[statusKey] || statusStyles.available
+                  }`}
                 >
                   {statusKey}
                 </span>
@@ -509,6 +542,16 @@ export default function ProductDetails() {
                     className={wishlisted ? "fill-red-500 text-red-500" : ""}
                   />
                   {wishlisted ? "Saved to Wishlist" : "Add to Wishlist"}
+                </button>
+              )}
+
+              {user && !isSeller && (
+                <button
+                  onClick={openReportModal}
+                  className="w-full py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-500 hover:bg-red-50 flex items-center justify-center gap-2 transition-all"
+                >
+                  <Flag size={15} />
+                  Report this listing
                 </button>
               )}
             </div>
