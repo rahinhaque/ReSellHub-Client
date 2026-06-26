@@ -15,18 +15,12 @@ import {
   Loader2,
   ShoppingBag,
   Ban,
-  RefreshCw,
+  Truck,
+  BadgeCheck,
   AlertTriangle,
 } from "lucide-react";
 
 const STATUS_CONFIG = {
-  processing: {
-    label: "Processing",
-    icon: RefreshCw,
-    style: "bg-blue-50 text-blue-700 border-blue-200",
-    iconStyle: "text-blue-500",
-    dot: "bg-blue-500",
-  },
   pending: {
     label: "Pending",
     icon: Clock,
@@ -37,6 +31,20 @@ const STATUS_CONFIG = {
   accepted: {
     label: "Accepted",
     icon: CheckCircle2,
+    style: "bg-blue-50 text-blue-700 border-blue-200",
+    iconStyle: "text-blue-500",
+    dot: "bg-blue-500",
+  },
+  shipped: {
+    label: "Shipped",
+    icon: Truck,
+    style: "bg-purple-50 text-purple-700 border-purple-200",
+    iconStyle: "text-purple-500",
+    dot: "bg-purple-500",
+  },
+  delivered: {
+    label: "Delivered",
+    icon: BadgeCheck,
     style: "bg-emerald-50 text-emerald-700 border-emerald-200",
     iconStyle: "text-emerald-500",
     dot: "bg-emerald-500",
@@ -49,6 +57,8 @@ const STATUS_CONFIG = {
     dot: "bg-red-400",
   },
 };
+
+const STEPS = ["pending", "accepted", "shipped", "delivered"];
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -64,8 +74,6 @@ function timeAgo(dateStr) {
     year: "numeric",
   });
 }
-
-const STEPS = ["processing", "pending", "accepted"];
 
 function OrderTracker({ status }) {
   const isCancelled = status === "cancelled";
@@ -133,9 +141,9 @@ function OrderCard({ order, onCancelled }) {
   const [cancelError, setCancelError] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const statusKey = order.orderStatus || "processing";
-  const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.processing;
-  const canCancel = statusKey === "processing" || statusKey === "pending";
+  const statusKey = order.orderStatus || "pending";
+  const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.pending;
+  const canCancel = statusKey === "pending";
 
   const handleCancel = async () => {
     try {
@@ -171,7 +179,7 @@ function OrderCard({ order, onCancelled }) {
             </p>
             <div className="flex items-center gap-3 mt-1.5">
               <span className="text-sm font-bold text-emerald-600">
-                ৳{Number(order.price).toLocaleString()}
+                ${Number(order.price).toLocaleString()}
               </span>
               <span className="text-xs text-gray-300">·</span>
               <span className="text-xs text-gray-400">
@@ -211,6 +219,15 @@ function OrderCard({ order, onCancelled }) {
             <OrderTracker status={statusKey} />
           </div>
 
+          {statusKey === "delivered" && (
+            <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-xl border border-emerald-100">
+              <BadgeCheck size={14} className="text-emerald-500 shrink-0" />
+              <p className="text-xs text-emerald-700 font-medium">
+                Your order has been delivered. Enjoy!
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-gray-50 rounded-xl p-3">
               <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">
@@ -225,7 +242,7 @@ function OrderCard({ order, onCancelled }) {
                 Amount
               </p>
               <p className="text-xs font-semibold text-gray-700">
-                ৳{Number(order.price).toLocaleString()}
+                ${Number(order.price).toLocaleString()}
               </p>
             </div>
             <div className="bg-gray-50 rounded-xl p-3">
@@ -394,9 +411,10 @@ export default function BuyerOrderList() {
 
   const FILTERS = [
     { key: "all", label: "All orders" },
-    { key: "processing", label: "Processing" },
     { key: "pending", label: "Pending" },
     { key: "accepted", label: "Accepted" },
+    { key: "shipped", label: "Shipped" },
+    { key: "delivered", label: "Delivered" },
     { key: "cancelled", label: "Cancelled" },
   ];
 
@@ -418,30 +436,37 @@ export default function BuyerOrderList() {
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        {FILTERS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key)}
-            className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
-              filter === key
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            {label}
-            {key === "all" && orders.length > 0 && (
-              <span
-                className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  filter === "all"
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-100 text-gray-500"
-                }`}
-              >
-                {orders.length}
-              </span>
-            )}
-          </button>
-        ))}
+        {FILTERS.map(({ key, label }) => {
+          const count =
+            key === "all"
+              ? orders.length
+              : orders.filter((o) => o.orderStatus === key).length;
+
+          return (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                filter === key
+                  ? "bg-emerald-600 text-white border-emerald-600"
+                  : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              {label}
+              {count > 0 && (
+                <span
+                  className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    filter === key
+                      ? "bg-white/20 text-white"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {loading ? (
