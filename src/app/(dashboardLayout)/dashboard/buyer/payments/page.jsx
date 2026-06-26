@@ -9,7 +9,8 @@ import {
   XCircle,
   Clock,
   Receipt,
-  ExternalLink,
+  RefreshCw,
+  AlertCircle,
 } from "lucide-react";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -23,13 +24,23 @@ function formatDate(dateStr) {
   });
 }
 
+// ── Payment status config — matches DB values exactly ────────────────────────
 const PAYMENT_STATUS = {
-  success: {
-    label: "Success",
+  paid: {
+    label: "Paid",
     style: "bg-emerald-50 text-emerald-700 border-emerald-200",
     dot: "bg-emerald-500",
     icon: CheckCircle2,
     iconStyle: "text-emerald-500",
+    amountStyle: "text-emerald-600",
+  },
+  refunded: {
+    label: "Refunded",
+    style: "bg-purple-50 text-purple-700 border-purple-200",
+    dot: "bg-purple-400",
+    icon: RefreshCw,
+    iconStyle: "text-purple-400",
+    amountStyle: "text-purple-500 line-through",
   },
   failed: {
     label: "Failed",
@@ -37,6 +48,7 @@ const PAYMENT_STATUS = {
     dot: "bg-red-500",
     icon: XCircle,
     iconStyle: "text-red-400",
+    amountStyle: "text-red-400",
   },
   pending: {
     label: "Pending",
@@ -44,6 +56,7 @@ const PAYMENT_STATUS = {
     dot: "bg-yellow-400",
     icon: Clock,
     iconStyle: "text-yellow-500",
+    amountStyle: "text-yellow-600",
   },
 };
 
@@ -90,12 +103,9 @@ function PaymentRow({ payment }) {
         className="w-full px-5 py-4 flex items-center justify-between gap-3 hover:bg-gray-50/50 transition-colors text-left"
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          {/* Icon */}
           <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0">
             <Icon size={17} className={cfg.iconStyle} />
           </div>
-
-          {/* Info */}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-gray-900 truncate">
               {payment.productTitle || "Product purchase"}
@@ -106,9 +116,8 @@ function PaymentRow({ payment }) {
           </div>
         </div>
 
-        {/* Amount + status */}
         <div className="flex flex-col items-end gap-1.5 shrink-0">
-          <span className="text-sm font-bold text-gray-900">
+          <span className={`text-sm font-bold ${cfg.amountStyle}`}>
             ${Number(payment.amount).toLocaleString()}
           </span>
           <span
@@ -123,14 +132,43 @@ function PaymentRow({ payment }) {
       {/* Expanded detail */}
       {expanded && (
         <div className="border-t border-gray-50 px-5 py-4 flex flex-col gap-3">
+          {/* Refund notice */}
+          {statusKey === "refunded" && (
+            <div className="flex items-center gap-2.5 px-4 py-3 bg-purple-50 rounded-xl border border-purple-100">
+              <RefreshCw size={14} className="text-purple-400 shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-purple-700">
+                  This payment was refunded
+                </p>
+                {payment.refundedAt && (
+                  <p className="text-[11px] text-purple-400 mt-0.5">
+                    Refunded on {formatDate(payment.refundedAt)}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-gray-50 rounded-xl p-3">
               <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">
-                Amount paid
+                Amount
               </p>
-              <p className="text-sm font-bold text-emerald-600">
+              <p className={`text-sm font-bold ${cfg.amountStyle}`}>
                 ${Number(payment.amount).toLocaleString()}
               </p>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-3">
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">
+                Payment status
+              </p>
+              <span
+                className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${cfg.style}`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                {cfg.label}
+              </span>
             </div>
 
             <div className="bg-gray-50 rounded-xl p-3">
@@ -156,18 +194,19 @@ function PaymentRow({ payment }) {
                   : "—"}
               </p>
             </div>
+          </div>
 
-            <div className="bg-gray-50 rounded-xl p-3">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">
-                Payment status
+          {/* Refund ID */}
+          {payment.refundId && (
+            <div className="bg-purple-50 rounded-xl px-3 py-2.5 border border-purple-100">
+              <p className="text-[10px] text-purple-400 uppercase tracking-wider mb-1">
+                Refund ID
               </p>
-              <p
-                className={`text-xs font-semibold capitalize ${cfg.iconStyle}`}
-              >
-                {cfg.label}
+              <p className="text-xs font-mono text-purple-600 break-all">
+                {payment.refundId}
               </p>
             </div>
-          </div>
+          )}
 
           {/* Transaction ID */}
           {payment.transactionId && (
@@ -212,9 +251,13 @@ function PaymentRow({ payment }) {
 
 // ── Summary cards ─────────────────────────────────────────────────────────────
 function SummaryCards({ payments }) {
-  const total = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-  const successful = payments.filter(
-    (p) => p.paymentStatus === "success",
+  const paidPayments = payments.filter((p) => p.paymentStatus === "paid");
+  const totalSpent = paidPayments.reduce(
+    (sum, p) => sum + Number(p.amount || 0),
+    0,
+  );
+  const refundedCount = payments.filter(
+    (p) => p.paymentStatus === "refunded",
   ).length;
   const totalCount = payments.length;
 
@@ -225,7 +268,7 @@ function SummaryCards({ payments }) {
           Total spent
         </p>
         <p className="text-lg font-bold text-gray-900">
-          ${total.toLocaleString()}
+          ${totalSpent.toLocaleString()}
         </p>
       </div>
       <div className="bg-white rounded-2xl border border-gray-100 p-4">
@@ -236,9 +279,9 @@ function SummaryCards({ payments }) {
       </div>
       <div className="bg-white rounded-2xl border border-gray-100 p-4">
         <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
-          Successful
+          Refunded
         </p>
-        <p className="text-lg font-bold text-emerald-600">{successful}</p>
+        <p className="text-lg font-bold text-purple-500">{refundedCount}</p>
       </div>
     </div>
   );
@@ -255,7 +298,6 @@ export default function BuyerPaymentHistory() {
 
   useEffect(() => {
     if (!user?.email) return;
-
     const fetch = async () => {
       try {
         const data = await getBuyerPayments(user.email);
@@ -266,15 +308,15 @@ export default function BuyerPaymentHistory() {
         setLoading(false);
       }
     };
-
     fetch();
   }, [user?.email]);
 
   const FILTERS = [
     { key: "all", label: "All" },
-    { key: "success", label: "Success" },
-    { key: "pending", label: "Pending" },
+    { key: "paid", label: "Paid" },
+    { key: "refunded", label: "Refunded" },
     { key: "failed", label: "Failed" },
+    { key: "pending", label: "Pending" },
   ];
 
   const filtered =
@@ -303,7 +345,7 @@ export default function BuyerPaymentHistory() {
       {!loading && payments.length > 0 && <SummaryCards payments={payments} />}
 
       {/* ── Filter tabs ── */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {FILTERS.map(({ key, label }) => {
           const count =
             key === "all"
@@ -314,7 +356,7 @@ export default function BuyerPaymentHistory() {
             <button
               key={key}
               onClick={() => setFilter(key)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all
+              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all
                 ${
                   filter === key
                     ? "bg-emerald-600 text-white border-emerald-600"
