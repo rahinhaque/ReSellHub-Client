@@ -1,6 +1,7 @@
 import FeaturedProducts from "@/components/FeaturedProducts";
 import HeroBanner from "@/components/HeroBanner";
 import MarketplaceStatistics from "@/components/MarketplaceStatistics";
+import PopularCategory from "@/components/PopularCategories";
 import SuccessStories from "@/components/SuccessStories";
 import SustainabilityImpact from "@/components/SustainabilityImpact";
 import TrustedSellersShowcase from "@/components/TrustedSellersShowcase";
@@ -12,6 +13,9 @@ export default function Home() {
       <HeroBanner />
       <div className="w-full bg-white">
         <FeaturedProducts />
+      </div>
+      <div className="w-full bg-white">
+        <PopularCategory />
       </div>
       <SuccessStories />
       <MarketplaceStatistics />
