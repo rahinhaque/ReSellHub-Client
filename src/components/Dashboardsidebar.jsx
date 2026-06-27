@@ -22,6 +22,7 @@ import {
   X,
   ChevronRight,
 } from "lucide-react";
+import { Monitor } from "lucide-react";
 
 // ── Menu definitions ────────────────────────────────────────────────
 const SELLER_MENU = [
@@ -120,6 +121,12 @@ const ADMIN_MENU = [
     label: "Platform Analytics",
     icon: TrendingUp,
     href: "/dashboard/admin/analytics",
+  },
+  {
+    key: "admin-monitoring",
+    label: "Admin Monitoring",
+    icon: Monitor,
+    href: "/dashboard/admin/monitoring",
   },
 ];
 

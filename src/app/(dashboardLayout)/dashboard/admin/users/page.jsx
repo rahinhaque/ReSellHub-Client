@@ -61,14 +61,21 @@ const ManageUsersPage = () => {
 
   const handleStatusToggle = async (user) => {
     const newStatus = user.status === "blocked" ? "active" : "blocked";
+
     try {
       setMutatingId(user._id);
-      await toast.promise(updateUserStatus(user._id, newStatus), {
-        loading: "Updating status...",
-        success: `User ${newStatus === "blocked" ? "blocked" : "unblocked"}!`,
-        error: "Failed to update user status",
-      });
+
+      await updateUserStatus(user._id, newStatus);
+
+      toast.success(
+        newStatus === "blocked"
+          ? "User blocked successfully."
+          : "User unblocked successfully.",
+      );
+
       await fetchUsers(true);
+    } catch (error) {
+      toast.error(error?.message || "Failed to update user status");
     } finally {
       setMutatingId(null);
     }

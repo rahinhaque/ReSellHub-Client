@@ -98,6 +98,9 @@ export default function ProductDetails() {
   const user = session?.user;
   const role = user?.role ?? null;
 
+  const isBuyer = role === "buyer";
+  const canInteract = isBuyer;
+
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
@@ -123,7 +126,7 @@ export default function ProductDetails() {
 
   useEffect(() => {
     const loadWishlistState = async () => {
-      if (!user?.email || !product?._id) return;
+      if (!user?.email || !product?._id || !canInteract) return;
 
       try {
         const items = await getWishlistByUser(user.email);
@@ -144,7 +147,7 @@ export default function ProductDetails() {
     };
 
     loadWishlistState();
-  }, [user?.email, product?._id]);
+  }, [user?.email, product?._id, canInteract]);
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -158,7 +161,7 @@ export default function ProductDetails() {
       return;
     }
 
-    if (role === "seller" || !product) return;
+    if (!canInteract || !product) return;
 
     setWishlistLoading(true);
     try {
@@ -197,7 +200,7 @@ export default function ProductDetails() {
       router.push("/Login");
       return;
     }
-    if (role === "seller") return;
+    if (!canInteract) return;
     setShowReportModal(true);
   };
 
@@ -238,6 +241,18 @@ export default function ProductDetails() {
     setActiveImage((i) => (i === images.length - 1 ? 0 : i + 1));
 
   const renderCTA = () => {
+    if (!canInteract) {
+      return (
+        <button
+          disabled
+          className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+        >
+          <Lock size={15} />
+          Only buyers can purchase or save items
+        </button>
+      );
+    }
+
     if (isSold) {
       return (
         <button
@@ -247,23 +262,6 @@ export default function ProductDetails() {
           <Package size={16} />
           This item is sold
         </button>
-      );
-    }
-
-    if (isSeller) {
-      return (
-        <div className="flex flex-col gap-2">
-          <button
-            disabled
-            className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-          >
-            <Lock size={15} />
-            Sellers can't purchase items
-          </button>
-          <p className="text-xs text-center text-gray-400">
-            Switch to a buyer account to make purchases.
-          </p>
-        </div>
       );
     }
 
@@ -329,16 +327,16 @@ export default function ProductDetails() {
 
                 <button
                   onClick={handleWishlist}
-                  disabled={wishlistLoading || isSeller || isSold}
+                  disabled={wishlistLoading || !canInteract || isSold}
                   title={
-                    isSeller
-                      ? "Sellers can't add to wishlist"
+                    !canInteract
+                      ? "Only buyers can add to wishlist"
                       : wishlisted
                         ? "Remove from wishlist"
                         : "Add to wishlist"
                   }
                   className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center shadow transition-all ${
-                    isSeller || isSold
+                    !canInteract || isSold
                       ? "bg-white/60 cursor-not-allowed"
                       : wishlisted
                         ? "bg-red-50 border border-red-200 hover:bg-red-100"
@@ -348,7 +346,7 @@ export default function ProductDetails() {
                   <Heart
                     size={16}
                     className={
-                      isSeller || isSold
+                      !canInteract || isSold
                         ? "text-gray-300"
                         : wishlisted
                           ? "text-red-500 fill-red-500"
@@ -357,7 +355,7 @@ export default function ProductDetails() {
                   />
                 </button>
 
-                {user && !isSeller && (
+                {canInteract && (
                   <button
                     onClick={openReportModal}
                     className="absolute bottom-3 right-3 py-2 px-3 rounded-xl text-xs font-medium border border-gray-100 bg-white/95 text-gray-500 hover:border-red-200 hover:text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5 transition-all shadow-sm"
@@ -501,7 +499,7 @@ export default function ProductDetails() {
             <div className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-3">
               {renderCTA()}
 
-              {!isSold && !isSeller && product.sellerInfo?.phone && (
+              {canInteract && !isSold && product.sellerInfo?.phone && (
                 <a
                   href={`https://wa.me/${product.sellerInfo.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
                     `Hi! I'm interested in your listing: ${product.title}`,
@@ -515,7 +513,7 @@ export default function ProductDetails() {
                 </a>
               )}
 
-              {!isSold && !isSeller && product.sellerInfo?.email && (
+              {canInteract && !isSold && product.sellerInfo?.email && (
                 <a
                   href={`mailto:${product.sellerInfo.email}?subject=${encodeURIComponent(
                     `Interested in: ${product.title}`,
@@ -527,7 +525,7 @@ export default function ProductDetails() {
                 </a>
               )}
 
-              {!isSeller && !isSold && (
+              {canInteract && !isSold && (
                 <button
                   onClick={handleWishlist}
                   disabled={wishlistLoading}
@@ -545,7 +543,7 @@ export default function ProductDetails() {
                 </button>
               )}
 
-              {user && !isSeller && (
+              {canInteract && (
                 <button
                   onClick={openReportModal}
                   className="w-full py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-500 hover:bg-red-50 flex items-center justify-center gap-2 transition-all"
