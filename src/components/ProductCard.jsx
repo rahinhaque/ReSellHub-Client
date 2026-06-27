@@ -62,9 +62,9 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
 
   return (
     <>
-      <div className="group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-100 transition-all duration-200 flex gap-4 p-4 items-start">
+      <div className="group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-100 transition-all duration-200 flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 sm:items-start">
         {/* Thumbnail */}
-        <div className="w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-100">
+        <div className="w-full sm:w-24 h-40 sm:h-24 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-100">
           {coverImage && !imgError ? (
             <img
               src={coverImage}
@@ -81,51 +81,50 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
         </div>
 
         {/* Info */}
-        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-          <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0 flex flex-col gap-2 sm:gap-1.5">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
             <h3 className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-emerald-700 transition-colors">
               {displayTitle}
             </h3>
 
             {/* Action buttons */}
-            {/* Action buttons */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-1.5 flex-wrap sm:flex-nowrap flex-shrink-0">
               <Link
                 href={`/dashboard/seller/products/${_id}`}
-                className="flex items-center gap-1.5 text-xs font-medium text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-500 hover:text-white hover:border-blue-500 px-3 py-1.5 rounded-lg transition-all duration-150"
+                className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 text-xs font-medium text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-500 hover:text-white hover:border-blue-500 px-3 py-2 sm:py-1.5 rounded-lg transition-all duration-150"
               >
-                <Eye size={12} />
-                Details
+                <Eye size={14} />
+                <span className="inline">Details</span>
               </Link>
               <button
                 onClick={() => setShowEdit(true)}
-                className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 border border-emerald-200 bg-emerald-50 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 px-3 py-1.5 rounded-lg transition-all duration-150"
+                className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 text-xs font-medium text-emerald-600 border border-emerald-200 bg-emerald-50 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 px-3 py-2 sm:py-1.5 rounded-lg transition-all duration-150"
               >
-                <Pencil size={12} />
-                Edit
+                <Pencil size={14} />
+                <span className="inline">Edit</span>
               </button>
               <button
                 onClick={() => setShowDelete(true)}
-                className="flex items-center gap-1.5 text-xs font-medium text-red-500 border border-red-100 bg-red-50 hover:bg-red-500 hover:text-white hover:border-red-500 px-3 py-1.5 rounded-lg transition-all duration-150"
+                className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 text-xs font-medium text-red-500 border border-red-100 bg-red-50 hover:bg-red-500 hover:text-white hover:border-red-500 px-3 py-2 sm:py-1.5 rounded-lg transition-all duration-150"
               >
-                <Trash2 size={12} />
-                Delete
+                <Trash2 size={14} />
+                <span className="inline">Delete</span>
               </button>
             </div>
           </div>
 
           {/* Meta row */}
-          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 mt-1 sm:mt-0">
             <span className="flex items-center gap-1">
               <Tag size={11} />
               {category || "—"}
             </span>
-            <span className="text-gray-200">|</span>
+            <span className="hidden sm:inline text-gray-200">|</span>
             <span className="flex items-center gap-1">
               <Package size={11} />
               Qty: {quantity ?? "—"}
             </span>
-            <span className="text-gray-200">|</span>
+            <span className="hidden sm:inline text-gray-200">|</span>
             <span className="flex items-center gap-1">
               <Clock size={11} />
               {createdAt ? timeAgo(createdAt) : "Recently"}
@@ -133,9 +132,9 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
           </div>
 
           {/* Bottom row: condition + price */}
-          <div className="flex items-center justify-between mt-1">
+          <div className="flex items-center justify-between mt-2 sm:mt-1 pt-2 sm:pt-0 border-t sm:border-0 border-gray-50">
             <span
-              className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
+              className={`text-xs font-medium px-2.5 py-1 sm:py-0.5 rounded-full ${
                 conditionStyles[conditionKey] || conditionStyles["used"]
               }`}
             >

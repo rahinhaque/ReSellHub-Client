@@ -9,9 +9,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.04,
-    },
+    transition: { staggerChildren: 0.04 },
   },
 };
 
@@ -20,13 +18,10 @@ const itemVariants = {
   visible: {
     y: 0,
     opacity: 1,
-    transition: {
-      type: "spring",
-      stiffness: 90,
-      damping: 14,
-    },
+    transition: { type: "spring", stiffness: 90, damping: 14 },
   },
 };
+
 import {
   Search,
   SlidersHorizontal,
@@ -38,6 +33,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  Filter,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -59,8 +55,8 @@ const CONDITIONS = [
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
-  { value: "price_asc", label: "Price: Low to High" },
-  { value: "price_desc", label: "Price: High to Low" },
+  { value: "price_asc", label: "Price: Low → High" },
+  { value: "price_desc", label: "Price: High → Low" },
 ];
 
 const conditionStyles = {
@@ -93,7 +89,7 @@ function ProductCard({ product }) {
 
   return (
     <motion.div
-      whileHover={{ y: -6, scale: 1.02 }}
+      whileHover={{ y: -4, scale: 1.01 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className="h-full flex w-full"
     >
@@ -101,55 +97,57 @@ function ProductCard({ product }) {
         href={`/products/${product._id}`}
         className="group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-100 transition-all duration-200 flex flex-col overflow-hidden w-full"
       >
-      <div className="w-full h-48 bg-gray-100 overflow-hidden">
-        {coverImage && !imgError ? (
-          <img
-            src={coverImage}
-            alt={product.title || "Product"}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-            <Package size={32} className="text-gray-300" />
-            <span className="text-xs text-gray-300">No image</span>
-          </div>
-        )}
-      </div>
+        <div className="w-full h-44 sm:h-48 bg-gray-100 overflow-hidden">
+          {coverImage && !imgError ? (
+            <img
+              src={coverImage}
+              alt={product.title || "Product"}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+              <Package size={32} className="text-gray-300" />
+              <span className="text-xs text-gray-300">No image</span>
+            </div>
+          )}
+        </div>
 
-      <div className="p-4 flex flex-col gap-2 flex-1">
-        <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-emerald-700 transition-colors leading-snug">
-          {product.title || "Untitled product"}
-        </h3>
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-          <Tag size={11} />
-          <span>{product.category || "—"}</span>
-          <span className="text-gray-200">·</span>
-          <Clock size={11} />
-          <span>
-            {product.createdAt ? timeAgo(product.createdAt) : "Recently"}
-          </span>
-        </div>
-        <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
-          <span
-            className={`text-xs font-medium px-2 py-0.5 rounded-full ${conditionStyles[conditionKey] || conditionStyles["used"]}`}
-          >
-            {conditionLabels[conditionKey] || conditionKey}
-          </span>
-          <span className="text-base font-bold text-emerald-600">
-            ৳{Number(product.price).toLocaleString()}
-          </span>
-        </div>
-        {product.sellerInfo?.name && (
-          <p className="text-xs text-gray-400 truncate">
-            by{" "}
-            <span className="text-gray-600 font-medium">
-              {product.sellerInfo.name}
+        <div className="p-3 sm:p-4 flex flex-col gap-2 flex-1">
+          <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-emerald-700 transition-colors leading-snug">
+            {product.title || "Untitled product"}
+          </h3>
+          <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
+            <span className="flex items-center gap-1">
+              <Tag size={10} />
+              {product.category || "—"}
             </span>
-          </p>
-        )}
-      </div>
-    </Link>
+            <span className="text-gray-200">·</span>
+            <span className="flex items-center gap-1">
+              <Clock size={10} />
+              {product.createdAt ? timeAgo(product.createdAt) : "Recently"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full ${conditionStyles[conditionKey] || conditionStyles["used"]}`}
+            >
+              {conditionLabels[conditionKey] || conditionKey}
+            </span>
+            <span className="text-sm sm:text-base font-bold text-emerald-600">
+              ৳{Number(product.price).toLocaleString()}
+            </span>
+          </div>
+          {product.sellerInfo?.name && (
+            <p className="text-xs text-gray-400 truncate">
+              by{" "}
+              <span className="text-gray-600 font-medium">
+                {product.sellerInfo.name}
+              </span>
+            </p>
+          )}
+        </div>
+      </Link>
     </motion.div>
   );
 }
@@ -157,8 +155,8 @@ function ProductCard({ product }) {
 function SkeletonCard() {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden animate-pulse">
-      <div className="w-full h-48 bg-gray-100" />
-      <div className="p-4 flex flex-col gap-2">
+      <div className="w-full h-44 sm:h-48 bg-gray-100" />
+      <div className="p-3 sm:p-4 flex flex-col gap-2">
         <div className="h-4 w-3/4 bg-gray-100 rounded" />
         <div className="h-3 w-1/2 bg-gray-100 rounded" />
         <div className="flex justify-between mt-3 pt-2 border-t border-gray-50">
@@ -170,27 +168,17 @@ function SkeletonCard() {
   );
 }
 
-// ── Pagination ────────────────────────────────────────────────────────────────
 function Pagination({ page, totalPages, onPageChange }) {
   if (totalPages <= 1) return null;
 
-  // Build page number array with ellipsis
   const getPages = () => {
-    if (totalPages <= 7)
+    if (totalPages <= 5)
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     const pages = [];
-    if (page <= 4) {
-      pages.push(1, 2, 3, 4, 5, "...", totalPages);
-    } else if (page >= totalPages - 3) {
-      pages.push(
-        1,
-        "...",
-        totalPages - 4,
-        totalPages - 3,
-        totalPages - 2,
-        totalPages - 1,
-        totalPages,
-      );
+    if (page <= 3) {
+      pages.push(1, 2, 3, "...", totalPages);
+    } else if (page >= totalPages - 2) {
+      pages.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
     } else {
       pages.push(1, "...", page - 1, page, page + 1, "...", totalPages);
     }
@@ -198,22 +186,20 @@ function Pagination({ page, totalPages, onPageChange }) {
   };
 
   return (
-    <div className="flex items-center justify-center gap-1.5 pt-2">
-      {/* Prev */}
+    <div className="flex items-center justify-center gap-1 sm:gap-1.5 pt-2">
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
-        className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
-        <ChevronLeft size={15} className="text-gray-500" />
+        <ChevronLeft size={14} className="text-gray-500" />
       </button>
 
-      {/* Page numbers */}
       {getPages().map((p, i) =>
         p === "..." ? (
           <span
-            key={`ellipsis-${i}`}
-            className="w-9 h-9 flex items-center justify-center text-xs text-gray-400"
+            key={`e-${i}`}
+            className="w-8 h-8 flex items-center justify-center text-xs text-gray-400"
           >
             …
           </span>
@@ -221,10 +207,10 @@ function Pagination({ page, totalPages, onPageChange }) {
           <button
             key={p}
             onClick={() => onPageChange(p)}
-            className={`w-9 h-9 rounded-xl text-xs font-semibold border transition-all ${
+            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs font-semibold border transition-all ${
               p === page
                 ? "bg-emerald-600 text-white border-emerald-600"
-                : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+                : "border-gray-200 text-gray-600 hover:bg-gray-50"
             }`}
           >
             {p}
@@ -232,13 +218,12 @@ function Pagination({ page, totalPages, onPageChange }) {
         ),
       )}
 
-      {/* Next */}
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page === totalPages}
-        className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
-        <ChevronRight size={15} className="text-gray-500" />
+        <ChevronRight size={14} className="text-gray-500" />
       </button>
     </div>
   );
@@ -254,28 +239,25 @@ export default function AllProducts() {
   const [condition, setCondition] = useState("");
   const [sort, setSort] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false); // mobile filter drawer
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const sortRef = useRef(null);
 
-  // Close sort dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
-      if (sortRef.current && !sortRef.current.contains(e.target)) {
+      if (sortRef.current && !sortRef.current.contains(e.target))
         setSortOpen(false);
-      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1);
   }, [category, condition, search, sort]);
 
-  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -290,14 +272,12 @@ export default function AllProducts() {
 
         const data = await serverFetch(`/api/products?${params.toString()}`);
 
-        // Handle both old (array) and new (paginated object) response shapes
         if (Array.isArray(data)) {
           setProducts(data);
           setTotal(data.length);
           setTotalPages(1);
         } else {
           const raw = Array.isArray(data.products) ? data.products : [];
-          // Deduplicate just in case
           const seen = new Set();
           const deduped = raw.filter((p) => {
             if (seen.has(p._id)) return false;
@@ -315,11 +295,9 @@ export default function AllProducts() {
         setIsLoading(false);
       }
     };
-
     fetchProducts();
   }, [category, condition, search, sort, page]);
 
-  // Scroll to top on page change
   const handlePageChange = (newPage) => {
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -341,6 +319,7 @@ export default function AllProducts() {
     clearSearch();
     setSort("newest");
     setPage(1);
+    setFilterOpen(false);
   };
 
   const activeFilters = [
@@ -356,26 +335,27 @@ export default function AllProducts() {
     },
   ].filter(Boolean);
 
-  // Pagination range text e.g. "Showing 11–20 of 45"
   const rangeStart = total === 0 ? 0 : (page - 1) * LIMIT + 1;
   const rangeEnd = Math.min(page * LIMIT, total);
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero / Search */}
-      <div className="bg-white border-b border-gray-100 px-4 py-8">
+      <div className="bg-white border-b border-gray-100 px-4 py-5 sm:py-8">
         <div className="max-w-5xl mx-auto">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-emerald-600 transition-colors mb-4"
+            className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-emerald-600 transition-colors mb-3"
           >
-            <ArrowLeft size={15} />
+            <ArrowLeft size={14} />
             Back to home
           </Link>
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">
-            Browse Products
-          </h1>
-          <p className="text-sm text-gray-400 mb-5">
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+              Browse Products
+            </h1>
+          </div>
+          <p className="text-xs sm:text-sm text-gray-400 mb-4">
             {isLoading
               ? "Loading…"
               : total > 0
@@ -383,18 +363,19 @@ export default function AllProducts() {
                 : "No products found"}
           </p>
 
+          {/* Search bar */}
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-1">
               <Search
-                size={15}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               />
               <input
                 type="text"
                 placeholder="Search products…"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 transition"
+                className="w-full pl-8 pr-8 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 transition"
               />
               {searchInput && (
                 <button
@@ -402,29 +383,142 @@ export default function AllProducts() {
                   onClick={clearSearch}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
                 >
-                  <X size={14} />
+                  <X size={13} />
                 </button>
               )}
             </div>
             <button
               type="submit"
-              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors"
+              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors shrink-0"
             >
-              Search
+              <span className="hidden sm:inline">Search</span>
+              <Search size={15} className="sm:hidden" />
+            </button>
+            {/* Mobile filter toggle */}
+            <button
+              type="button"
+              onClick={() => setFilterOpen((v) => !v)}
+              className="sm:hidden relative px-3 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-600 hover:border-emerald-300 transition"
+            >
+              <Filter size={15} />
+              {activeFilters.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+                  {activeFilters.length}
+                </span>
+              )}
             </button>
           </form>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-5">
-        {/* Filters row */}
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+      <div className="max-w-5xl mx-auto px-4 py-4 sm:py-6 flex flex-col gap-4">
+        {/* ── Mobile Filter Drawer ── */}
+        {filterOpen && (
+          <div className="sm:hidden bg-white border border-gray-100 rounded-2xl shadow-md p-4 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-700">
+                Filters
+              </span>
+              <button
+                onClick={() => setFilterOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Category */}
+            <div>
+              <p className="text-xs text-gray-400 font-medium mb-2 uppercase tracking-wide">
+                Category
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setCategory(cat)}
+                    className={`text-xs font-medium px-3 py-1.5 rounded-xl border transition-all ${
+                      category === cat
+                        ? "bg-emerald-500 text-white border-emerald-500"
+                        : "bg-white text-gray-500 border-gray-200"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Condition */}
+            <div>
+              <p className="text-xs text-gray-400 font-medium mb-2 uppercase tracking-wide">
+                Condition
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {CONDITIONS.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setCondition(value)}
+                    className={`text-xs font-medium px-3 py-1.5 rounded-xl border transition-all ${
+                      condition === value
+                        ? "bg-emerald-500 text-white border-emerald-500"
+                        : "bg-white text-gray-500 border-gray-200"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort */}
+            <div>
+              <p className="text-xs text-gray-400 font-medium mb-2 uppercase tracking-wide">
+                Sort by
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {SORT_OPTIONS.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setSort(value)}
+                    className={`text-xs font-medium px-3 py-1.5 rounded-xl border transition-all ${
+                      sort === value
+                        ? "bg-emerald-500 text-white border-emerald-500"
+                        : "bg-white text-gray-500 border-gray-200"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={clearAll}
+                className="flex-1 py-2 text-xs font-medium border border-gray-200 rounded-xl text-gray-500 hover:border-red-300 hover:text-red-500 transition"
+              >
+                Clear all
+              </button>
+              <button
+                onClick={() => setFilterOpen(false)}
+                className="flex-1 py-2 text-xs font-semibold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Desktop Filters ── */}
+        <div className="hidden sm:flex flex-col gap-3">
+          {/* Category pills */}
           <div className="flex gap-2 flex-wrap">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setCategory(cat)}
-                className={`text-xs font-medium px-3 py-1.5 rounded-xl border transition-all ${
+                className={`text-xs font-medium px-3 py-1.5 rounded-xl border transition-all shrink-0 ${
                   category === cat
                     ? "bg-emerald-500 text-white border-emerald-500"
                     : "bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-600"
@@ -435,7 +529,7 @@ export default function AllProducts() {
             ))}
           </div>
 
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-2 items-center justify-end">
             <select
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
@@ -509,7 +603,7 @@ export default function AllProducts() {
 
         {/* Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {Array.from({ length: LIMIT }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -533,7 +627,7 @@ export default function AllProducts() {
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+              className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
             >
               {products.map((product) => (
                 <motion.div key={product._id} variants={itemVariants}>
@@ -542,14 +636,12 @@ export default function AllProducts() {
               ))}
             </motion.div>
 
-            {/* Pagination */}
             <Pagination
               page={page}
               totalPages={totalPages}
               onPageChange={handlePageChange}
             />
 
-            {/* Range text below pagination */}
             {totalPages > 1 && (
               <p className="text-xs text-gray-400 text-center">
                 Page {page} of {totalPages} · {total} products total

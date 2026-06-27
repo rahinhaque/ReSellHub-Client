@@ -312,7 +312,7 @@ function OrderCard({ order, onResolved }) {
         {expanded && (
           <div className="border-t border-gray-50 px-5 py-4 flex flex-col gap-4">
             {/* Buyer & Seller info */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="bg-gray-50 rounded-xl p-3">
                 <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-2">
                   Buyer
@@ -350,7 +350,7 @@ function OrderCard({ order, onResolved }) {
             </div>
 
             {/* Order details */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="bg-gray-50 rounded-xl p-3">
                 <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">
                   Amount

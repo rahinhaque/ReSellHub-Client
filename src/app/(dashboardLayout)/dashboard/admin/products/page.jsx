@@ -604,7 +604,7 @@ export default function ManageProductsPage() {
             {/* Products table */}
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="overflow-x-auto">
-                <table className="min-w-full text-left">
+                <table className="min-w-full text-left whitespace-nowrap">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
                       {[
@@ -671,7 +671,7 @@ export default function ManageProductsPage() {
         {view === "reports" && (
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-left">
+              <table className="min-w-full text-left whitespace-nowrap">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
                     {[

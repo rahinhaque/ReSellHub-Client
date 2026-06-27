@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth-client";
+import { Menu, X } from "lucide-react";
 
 const CATEGORIES = [
   { label: "Electronics", color: "#1D9E75" },
@@ -23,10 +24,10 @@ export default function Navbar() {
 
   const [catOpen, setCatOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const catRef = useRef(null);
   const profileRef = useRef(null);
 
-  // ── Role-based dashboard route ──────────────────────────────────
   const dashboardHref =
     user?.role === "seller"
       ? "/dashboard/seller"
@@ -48,7 +49,19 @@ export default function Navbar() {
   useEffect(() => {
     setProfileOpen(false);
     setCatOpen(false);
+    setMobileOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   const initials = user?.name
     ? user.name
@@ -62,6 +75,7 @@ export default function Navbar() {
   const handleSignOut = async () => {
     await signOut();
     setProfileOpen(false);
+    setMobileOpen(false);
     router.push("/");
     router.refresh();
   };
@@ -97,7 +111,7 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* ── Center nav ── */}
+        {/* ── Center nav (desktop) ── */}
         <nav
           className="hidden md:flex items-center gap-1"
           aria-label="Main navigation"
@@ -146,7 +160,7 @@ export default function Navbar() {
                   {CATEGORIES.map(({ label, color }) => (
                     <Link
                       key={label}
-                      href={`/categories/${label.toLowerCase().replace(/\s+/g, "-")}`}
+                      href={`/products?category=${encodeURIComponent(label)}`}
                       className="flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       role="menuitem"
                       onClick={() => setCatOpen(false)}
@@ -160,7 +174,7 @@ export default function Navbar() {
                   ))}
                   <div className="my-1.5 mx-3 border-t border-gray-100" />
                   <Link
-                    href="/categories"
+                    href="/products"
                     className="flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm font-medium text-emerald-600 hover:bg-emerald-50 transition-colors"
                     role="menuitem"
                     onClick={() => setCatOpen(false)}
@@ -169,14 +183,14 @@ export default function Navbar() {
                       className="ti ti-layout-grid text-base"
                       aria-hidden="true"
                     />
-                    View all categories
+                    View all products
                   </Link>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Dashboard — logged-in only, role-aware href */}
+          {/* Dashboard — logged-in only */}
           {user && (
             <Link
               href={dashboardHref}
@@ -197,7 +211,7 @@ export default function Navbar() {
 
         {/* ── Right side ── */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Search */}
+          {/* Search (desktop/tablet) */}
           <Link
             href="/products?search="
             className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-400 hover:border-gray-300 hover:bg-gray-100 transition-colors w-44"
@@ -207,14 +221,23 @@ export default function Navbar() {
             <span>Search products…</span>
           </Link>
 
+          {/* Search icon (mobile only) */}
+          <Link
+            href="/products?search="
+            className="sm:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors"
+            aria-label="Search products"
+          >
+            <i className="ti ti-search text-base" aria-hidden="true" />
+          </Link>
+
           {/* Loading skeleton */}
           {isPending && (
             <div className="w-9 h-9 rounded-full bg-gray-200 animate-pulse" />
           )}
 
-          {/* Logged in: Profile dropdown */}
+          {/* Logged in: Profile dropdown (desktop) */}
           {!isPending && user && (
-            <div className="relative" ref={profileRef}>
+            <div className="hidden md:block relative" ref={profileRef}>
               <button
                 className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 flex items-center justify-center text-white text-sm font-bold shadow hover:shadow-md hover:scale-105 transition-all overflow-hidden border-2 border-white ring-1 ring-gray-200"
                 onClick={() => setProfileOpen((v) => !v)}
@@ -279,9 +302,13 @@ export default function Navbar() {
                       </div>
                     </div>
 
-                    {/* Nav items — dashboard link is role-aware */}
+                    {/* Nav items */}
                     {[
-                      { href: "/profile", icon: "ti-user", label: "My profile" },
+                      {
+                        href: "/profile",
+                        icon: "ti-user",
+                        label: "My profile",
+                      },
                       {
                         href: dashboardHref,
                         icon: "ti-layout-dashboard",
@@ -297,7 +324,11 @@ export default function Navbar() {
                         icon: "ti-shopping-cart",
                         label: "My orders",
                       },
-                      { href: "/saved", icon: "ti-heart", label: "Saved items" },
+                      {
+                        href: "/saved",
+                        icon: "ti-heart",
+                        label: "Saved items",
+                      },
                     ].map(({ href, icon, label }) => (
                       <Link
                         key={href}
@@ -345,7 +376,10 @@ export default function Navbar() {
                       role="menuitem"
                       style={{ width: "calc(100% - 12px)" }}
                     >
-                      <i className="ti ti-logout text-base" aria-hidden="true" />
+                      <i
+                        className="ti ti-logout text-base"
+                        aria-hidden="true"
+                      />
                       Log out
                     </button>
                   </motion.div>
@@ -354,9 +388,9 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* Guest: Log in + Register */}
+          {/* Guest: Log in + Register (desktop) */}
           {!isPending && !user && (
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               <div className="w-px h-5 bg-gray-200 mx-1" aria-hidden="true" />
               <Link
                 href="/Login"
@@ -372,8 +406,177 @@ export default function Navbar() {
               </Link>
             </div>
           )}
+
+          {/* Mobile: Avatar (if logged in) */}
+          {!isPending && user && (
+            <button
+              className="md:hidden w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 flex items-center justify-center text-white text-sm font-bold shadow overflow-hidden border-2 border-white ring-1 ring-gray-200"
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label="Open menu"
+            >
+              {user.image ? (
+                <img
+                  src={user.image}
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span>{initials}</span>
+              )}
+            </button>
+          )}
+
+          {/* Hamburger (mobile, guest) */}
+          {!isPending && !user && (
+            <button
+              className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            >
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* ── Mobile Menu Drawer ── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 top-16 bg-black/30 z-40 md:hidden"
+              onClick={() => setMobileOpen(false)}
+            />
+
+            {/* Drawer */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-full left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-lg md:hidden max-h-[calc(100vh-4rem)] overflow-y-auto"
+            >
+              <div className="px-4 py-4 space-y-1">
+                {/* Nav Links */}
+                {navLinks.map(({ href, label, icon }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                      pathname === href
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <i className={`ti ${icon} text-base`} aria-hidden="true" />
+                    {label}
+                  </Link>
+                ))}
+
+                {/* Dashboard (if logged in) */}
+                {user && (
+                  <Link
+                    href={dashboardHref}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                      pathname.startsWith("/dashboard")
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <i
+                      className="ti ti-layout-dashboard text-base"
+                      aria-hidden="true"
+                    />
+                    Dashboard
+                  </Link>
+                )}
+
+                {/* Categories */}
+                <div className="pt-1 pb-1">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-3 mb-2">
+                    Categories
+                  </p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {CATEGORIES.map(({ label, color }) => (
+                      <Link
+                        key={label}
+                        href={`/products?category=${encodeURIComponent(label)}`}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ background: color }}
+                        />
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-100 my-2" />
+
+                {/* User Section */}
+                {user ? (
+                  <>
+                    <div className="flex items-center gap-3 px-3 py-2">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden">
+                        {user.image ? (
+                          <img
+                            src={user.image}
+                            alt={user.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          initials
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {user.name}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <i
+                        className="ti ti-logout text-base"
+                        aria-hidden="true"
+                      />
+                      Log out
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-2 pt-1">
+                    <Link
+                      href="/Login"
+                      className="flex items-center justify-center px-4 py-3 rounded-xl text-sm font-medium text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors"
+                    >
+                      Log in
+                    </Link>
+                    <Link
+                      href="/Register"
+                      className="flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm"
+                    >
+                      Register
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.header>
   );
 }

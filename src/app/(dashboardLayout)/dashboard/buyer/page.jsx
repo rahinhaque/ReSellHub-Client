@@ -67,7 +67,7 @@ const STATUS_CONFIG = {
 function Skeleton() {
   return (
     <div className="flex flex-col gap-6 animate-pulse">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {[1, 2].map((i) => (
           <div
             key={i}
@@ -148,7 +148,7 @@ export default function BuyerDashboardOverview() {
         <Skeleton />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Link
               href="/dashboard/buyer/orders"
               className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-3 hover:border-emerald-200 hover:shadow-sm transition-all group"

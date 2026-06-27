@@ -65,26 +65,26 @@ function Rating() {
 
 export default function TrustedSellersShowcase() {
   return (
-    <section className="w-full bg-gray-50 py-20 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+    <section className="w-full bg-gray-50 py-14 sm:py-20 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
         {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="text-center mb-14"
+          className="text-center mb-10 sm:mb-14"
         >
           <span className="inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-1 text-sm font-semibold text-green-700">
             <ShieldCheck size={16} />
             Trusted Sellers
           </span>
 
-          <h2 className="mt-5 text-4xl lg:text-5xl font-extrabold text-gray-900">
+          <h2 className="mt-4 sm:mt-5 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900">
             Meet Our Top-Rated Sellers
           </h2>
 
-          <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-600">
+          <p className="mt-3 sm:mt-4 max-w-2xl mx-auto text-base sm:text-lg text-gray-600">
             Buy with confidence from highly rated sellers known for quality
             products, quick responses, and excellent customer experiences.
           </p>
@@ -96,7 +96,7 @@ export default function TrustedSellersShowcase() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-5 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3"
         >
           {SELLERS.map((seller, index) => (
             <motion.div
@@ -104,7 +104,7 @@ export default function TrustedSellersShowcase() {
               variants={cardVariants}
               whileHover={{ scale: 1.03, y: -4 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm hover:shadow-md transition-shadow"
+              className="rounded-2xl border border-gray-100 bg-white p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow"
             >
               {/* Badge */}
               <div className="flex justify-end">
@@ -119,21 +119,21 @@ export default function TrustedSellersShowcase() {
                 <motion.div
                   whileHover={{ scale: 1.08 }}
                   transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                  className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100 text-3xl font-bold text-green-700 cursor-pointer shadow-inner"
+                  className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-green-100 text-2xl sm:text-3xl font-bold text-green-700 cursor-pointer shadow-inner"
                 >
                   {seller.name.charAt(0)}
                 </motion.div>
               </div>
 
               {/* Info */}
-              <div className="mt-6 text-center">
-                <h3 className="text-xl font-bold text-gray-900">
+              <div className="mt-5 sm:mt-6 text-center">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900">
                   {seller.name}
                 </h3>
 
                 <p className="mt-1 text-sm text-gray-500">{seller.username}</p>
 
-                <div className="mt-4 flex justify-center">
+                <div className="mt-3 sm:mt-4 flex justify-center">
                   <Rating />
                 </div>
 
@@ -141,7 +141,7 @@ export default function TrustedSellersShowcase() {
                   ⭐ {seller.rating} Rating
                 </p>
 
-                <div className="mt-6 space-y-2 text-sm text-gray-600">
+                <div className="mt-5 sm:mt-6 space-y-1.5 text-sm text-gray-600">
                   <p>{seller.reviews}</p>
                   <p>{seller.products}</p>
                 </div>
@@ -151,7 +151,7 @@ export default function TrustedSellersShowcase() {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-green-700 px-5 py-3 font-semibold text-white transition hover:bg-green-800 shadow-sm"
+                className="mt-6 sm:mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-green-700 px-5 py-2.5 sm:py-3 font-semibold text-white transition hover:bg-green-800 shadow-sm text-sm sm:text-base"
               >
                 View Profile
                 <ArrowRight size={16} />
@@ -166,13 +166,13 @@ export default function TrustedSellersShowcase() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mt-16 rounded-3xl bg-white border border-gray-100 p-10 text-center shadow-sm"
+          className="mt-12 sm:mt-16 rounded-3xl bg-white border border-gray-100 p-7 sm:p-10 text-center shadow-sm"
         >
-          <h3 className="text-3xl font-bold text-gray-900">
+          <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Become a Trusted Seller
           </h3>
 
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
+          <p className="mx-auto mt-3 sm:mt-4 max-w-2xl text-base sm:text-lg text-gray-600">
             Build your reputation by providing quality products, maintaining
             great communication, and earning positive reviews from buyers.
           </p>
@@ -180,7 +180,7 @@ export default function TrustedSellersShowcase() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-green-700 px-6 py-3 font-semibold text-white transition hover:bg-green-800 shadow-md"
+            className="mt-6 sm:mt-8 inline-flex items-center gap-2 rounded-full bg-green-700 px-6 py-3 font-semibold text-white transition hover:bg-green-800 shadow-md text-sm sm:text-base"
           >
             Start Selling
             <ArrowRight size={18} />

@@ -24,7 +24,7 @@ const STORIES = [
     name: "Nusrat Jahan",
     role: "Buyer",
     message:
-      "Love how easy it is to find affordable items. It also feels good knowing I’m reducing waste.",
+      "Love how easy it is to find affordable items. It also feels good knowing I'm reducing waste.",
     rating: 5,
     type: "buyer",
   },
@@ -65,20 +65,20 @@ function Stars({ count }) {
 
 export default function SuccessStories() {
   return (
-    <section className="w-full bg-white py-20 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+    <section className="w-full bg-white py-14 sm:py-20 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
         {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="text-center mb-14"
+          className="text-center mb-10 sm:mb-14"
         >
-          <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900">
             Success Stories
           </h2>
-          <p className="mt-4 text-gray-600 text-lg max-w-2xl mx-auto">
+          <p className="mt-3 sm:mt-4 text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
             Real experiences from people who buy and sell on ReSell Hub every
             day.
           </p>
@@ -90,7 +90,7 @@ export default function SuccessStories() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="grid md:grid-cols-3 gap-8"
+          className="grid sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8"
         >
           {STORIES.map((story, index) => (
             <motion.div
@@ -98,12 +98,12 @@ export default function SuccessStories() {
               variants={cardVariants}
               whileHover={{ scale: 1.025, y: -4 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="relative bg-gray-50 border border-gray-100 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow"
+              className="relative bg-gray-50 border border-gray-100 rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow"
             >
               {/* Quote icon */}
               <Quote
                 className="absolute top-5 right-5 text-green-200"
-                size={40}
+                size={36}
               />
 
               {/* Role badge */}
@@ -141,13 +141,13 @@ export default function SuccessStories() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="text-center mt-14"
+          className="text-center mt-10 sm:mt-14"
         >
-          <p className="text-gray-600 mb-4">Want to share your experience?</p>
+          <p className="text-gray-600 mb-4 text-sm sm:text-base">Want to share your experience?</p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-full font-semibold transition shadow-md"
+            className="inline-flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-full font-semibold transition shadow-md text-sm sm:text-base"
           >
             Share Your Story
             <ArrowRight size={16} />

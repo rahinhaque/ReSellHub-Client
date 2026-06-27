@@ -61,25 +61,28 @@ function timeAgo(dateStr) {
 
 function Skeleton() {
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 animate-pulse">
-      <div className="max-w-4xl mx-auto flex flex-col gap-6">
+    <div className="min-h-screen bg-gray-50 py-6 px-4 animate-pulse">
+      <div className="max-w-4xl mx-auto flex flex-col gap-5">
         <div className="h-4 w-28 bg-gray-200 rounded" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col md:grid md:grid-cols-2 gap-4 sm:gap-6">
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="w-full h-80 bg-gray-100" />
+            <div className="w-full h-64 sm:h-80 bg-gray-100" />
             <div className="flex gap-2 p-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="w-16 h-16 rounded-xl bg-gray-100" />
+                <div
+                  key={i}
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-gray-100"
+                />
               ))}
             </div>
           </div>
           <div className="flex flex-col gap-4">
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-3">
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 flex flex-col gap-3">
               <div className="h-6 w-3/4 bg-gray-100 rounded" />
               <div className="h-8 w-1/3 bg-gray-100 rounded" />
               <div className="h-4 w-1/2 bg-gray-100 rounded" />
             </div>
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-3">
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 flex flex-col gap-3">
               <div className="h-10 w-full bg-gray-100 rounded-xl" />
               <div className="h-10 w-full bg-gray-100 rounded-xl" />
             </div>
@@ -127,13 +130,11 @@ export default function ProductDetails() {
   useEffect(() => {
     const loadWishlistState = async () => {
       if (!user?.email || !product?._id || !canInteract) return;
-
       try {
         const items = await getWishlistByUser(user.email);
         const found = Array.isArray(items)
           ? items.find((item) => String(item.productId) === String(product._id))
           : null;
-
         if (found) {
           setWishlisted(true);
           setWishlistId(found._id);
@@ -145,7 +146,6 @@ export default function ProductDetails() {
         console.error("Failed to load wishlist state:", error);
       }
     };
-
     loadWishlistState();
   }, [user?.email, product?._id, canInteract]);
 
@@ -160,9 +160,7 @@ export default function ProductDetails() {
       router.push("/Login");
       return;
     }
-
     if (!canInteract || !product) return;
-
     setWishlistLoading(true);
     try {
       if (wishlisted && wishlistId) {
@@ -171,7 +169,6 @@ export default function ProductDetails() {
         setWishlistId(null);
         return;
       }
-
       const payload = {
         productId: String(product._id),
         userId: user.id || "",
@@ -184,7 +181,6 @@ export default function ProductDetails() {
             : product.productImage || "",
         sellerInfo: product.sellerInfo || null,
       };
-
       const result = await addToWishlist(payload);
       setWishlisted(true);
       if (result?._id) setWishlistId(result._id);
@@ -208,7 +204,7 @@ export default function ProductDetails() {
 
   if (!product)
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-4">
         <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
           <Package size={28} className="text-gray-300" />
         </div>
@@ -232,7 +228,6 @@ export default function ProductDetails() {
   const conditionKey = product.condition || "used";
   const statusKey = product.status || "available";
   const isSold = statusKey === "sold";
-  const isSeller = role === "seller";
   const isGuest = !user;
 
   const prevImage = () =>
@@ -252,7 +247,6 @@ export default function ProductDetails() {
         </button>
       );
     }
-
     if (isSold) {
       return (
         <button
@@ -264,7 +258,6 @@ export default function ProductDetails() {
         </button>
       );
     }
-
     if (isGuest) {
       return (
         <Link
@@ -276,34 +269,40 @@ export default function ProductDetails() {
         </Link>
       );
     }
-
     return <PurchaseButton product={product} />;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto flex flex-col gap-6">
-        <div className="flex items-center gap-2 text-sm text-gray-400">
-          <Link href="/" className="hover:text-emerald-600 transition-colors">
+    <div className="min-h-screen bg-gray-50 py-5 sm:py-8 px-4">
+      <div className="max-w-4xl mx-auto flex flex-col gap-4 sm:gap-6">
+        {/* Breadcrumb — simplified on mobile */}
+        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-400 overflow-hidden">
+          <Link
+            href="/"
+            className="hover:text-emerald-600 transition-colors shrink-0"
+          >
             Home
           </Link>
           <span>/</span>
           <Link
             href="/products"
-            className="hover:text-emerald-600 transition-colors"
+            className="hover:text-emerald-600 transition-colors shrink-0"
           >
             Products
           </Link>
           <span>/</span>
-          <span className="text-gray-600 line-clamp-1">
+          <span className="text-gray-600 truncate">
             {product.title || "Product"}
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Main grid — stacked on mobile, side-by-side on md+ */}
+        <div className="flex flex-col md:grid md:grid-cols-2 gap-4 sm:gap-6">
+          {/* ── Left: Image gallery ── */}
           <div className="flex flex-col gap-3">
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="relative w-full h-80 bg-gray-100">
+              {/* Main image */}
+              <div className="relative w-full h-64 sm:h-80 bg-gray-100">
                 {images.length > 0 ? (
                   <img
                     src={images[activeImage]}
@@ -319,12 +318,13 @@ export default function ProductDetails() {
 
                 {isSold && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <span className="text-white text-2xl font-bold tracking-widest rotate-[-15deg] border-4 border-white px-6 py-2 rounded-xl opacity-90">
+                    <span className="text-white text-xl sm:text-2xl font-bold tracking-widest rotate-[-15deg] border-4 border-white px-4 sm:px-6 py-2 rounded-xl opacity-90">
                       SOLD
                     </span>
                   </div>
                 )}
 
+                {/* Wishlist heart button */}
                 <button
                   onClick={handleWishlist}
                   disabled={wishlistLoading || !canInteract || isSold}
@@ -344,7 +344,7 @@ export default function ProductDetails() {
                   }`}
                 >
                   <Heart
-                    size={16}
+                    size={15}
                     className={
                       !canInteract || isSold
                         ? "text-gray-300"
@@ -355,13 +355,14 @@ export default function ProductDetails() {
                   />
                 </button>
 
+                {/* Report button */}
                 {canInteract && (
                   <button
                     onClick={openReportModal}
-                    className="absolute bottom-3 right-3 py-2 px-3 rounded-xl text-xs font-medium border border-gray-100 bg-white/95 text-gray-500 hover:border-red-200 hover:text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                    className="absolute bottom-3 right-3 py-1.5 px-2.5 rounded-xl text-xs font-medium border border-gray-100 bg-white/95 text-gray-500 hover:border-red-200 hover:text-red-500 hover:bg-red-50 flex items-center justify-center gap-1 transition-all shadow-sm"
                   >
-                    <Flag size={12} />
-                    Report listing
+                    <Flag size={11} />
+                    <span className="hidden sm:inline">Report listing</span>
                   </button>
                 )}
 
@@ -373,37 +374,36 @@ export default function ProductDetails() {
                   />
                 )}
 
+                {/* Prev/next arrows */}
                 {images.length > 1 && (
                   <>
                     <button
                       onClick={prevImage}
                       className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow transition-all"
                     >
-                      <ChevronLeft size={16} className="text-gray-600" />
+                      <ChevronLeft size={15} className="text-gray-600" />
                     </button>
                     <button
                       onClick={nextImage}
                       className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow transition-all"
                     >
-                      <ChevronRight size={16} className="text-gray-600" />
+                      <ChevronRight size={15} className="text-gray-600" />
                     </button>
+                    <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">
+                      {activeImage + 1} / {images.length}
+                    </div>
                   </>
-                )}
-
-                {images.length > 1 && (
-                  <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">
-                    {activeImage + 1} / {images.length}
-                  </div>
                 )}
               </div>
 
+              {/* Thumbnails */}
               {images.length > 1 && (
-                <div className="flex gap-2 p-3 overflow-x-auto">
+                <div className="flex gap-2 p-3 overflow-x-auto scrollbar-hide">
                   {images.map((img, i) => (
                     <button
                       key={i}
                       onClick={() => setActiveImage(i)}
-                      className={`w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
+                      className={`w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
                         activeImage === i
                           ? "border-emerald-400"
                           : "border-transparent hover:border-gray-200"
@@ -420,7 +420,8 @@ export default function ProductDetails() {
               )}
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 p-4">
+            {/* Trust badges — hidden on mobile to save space */}
+            <div className="hidden sm:block bg-white rounded-2xl border border-gray-100 p-4">
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <div className="flex items-center gap-1.5">
                   <Shield size={13} className="text-emerald-500" />
@@ -435,10 +436,12 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-3">
+          {/* ── Right: Details & Actions ── */}
+          <div className="flex flex-col gap-3 sm:gap-4">
+            {/* Title, price, badges */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 flex flex-col gap-3">
               <div className="flex items-start justify-between gap-2">
-                <h1 className="text-lg font-bold text-gray-800 leading-snug flex-1">
+                <h1 className="text-base sm:text-lg font-bold text-gray-800 leading-snug flex-1">
                   {product.title || product.productTitle || "Untitled product"}
                 </h1>
                 <button
@@ -457,70 +460,63 @@ export default function ProductDetails() {
                 <p className="text-xs text-emerald-600 -mt-1">Link copied!</p>
               )}
 
-              <div className="text-3xl font-bold text-emerald-600">
+              <div className="text-2xl sm:text-3xl font-bold text-emerald-600">
                 ৳{Number(product.price).toLocaleString()}
               </div>
 
               <div className="flex flex-wrap gap-2">
                 <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded-full border ${
-                    conditionStyles[conditionKey] || conditionStyles.used
-                  }`}
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full border ${conditionStyles[conditionKey] || conditionStyles.used}`}
                 >
                   {conditionLabels[conditionKey] || conditionKey}
                 </span>
                 <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded-full border capitalize ${
-                    statusStyles[statusKey] || statusStyles.available
-                  }`}
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full border capitalize ${statusStyles[statusKey] || statusStyles.available}`}
                 >
                   {statusKey}
                 </span>
               </div>
 
-              <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-400 pt-2 border-t border-gray-50">
-                <span className="flex items-center gap-1.5">
-                  <Tag size={12} />
+              <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-gray-400 pt-2 border-t border-gray-50">
+                <span className="flex items-center gap-1">
+                  <Tag size={11} />
                   {product.category || "—"}
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <Layers size={12} />
+                <span className="flex items-center gap-1">
+                  <Layers size={11} />
                   {product.quantity > 0
                     ? `${product.quantity} in stock`
                     : "Out of stock"}
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <Clock size={12} />
+                <span className="flex items-center gap-1">
+                  <Clock size={11} />
                   {product.createdAt ? timeAgo(product.createdAt) : "Recently"}
                 </span>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-3">
+            {/* CTA actions */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 flex flex-col gap-2.5">
               {renderCTA()}
 
               {canInteract && !isSold && product.sellerInfo?.phone && (
                 <a
-                  href={`https://wa.me/${product.sellerInfo.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
-                    `Hi! I'm interested in your listing: ${product.title}`,
-                  )}`}
+                  href={`https://wa.me/${product.sellerInfo.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi! I'm interested in your listing: ${product.title}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full py-3 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center gap-2 transition-all"
                 >
-                  <MessageCircle size={16} />
+                  <MessageCircle size={15} />
                   Contact Seller on WhatsApp
                 </a>
               )}
 
               {canInteract && !isSold && product.sellerInfo?.email && (
                 <a
-                  href={`mailto:${product.sellerInfo.email}?subject=${encodeURIComponent(
-                    `Interested in: ${product.title}`,
-                  )}`}
+                  href={`mailto:${product.sellerInfo.email}?subject=${encodeURIComponent(`Interested in: ${product.title}`)}`}
                   className="w-full py-3 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center gap-2 transition-all"
                 >
-                  <Mail size={16} />
+                  <Mail size={15} />
                   Contact Seller via Email
                 </a>
               )}
@@ -536,7 +532,7 @@ export default function ProductDetails() {
                   }`}
                 >
                   <Heart
-                    size={15}
+                    size={14}
                     className={wishlisted ? "fill-red-500 text-red-500" : ""}
                   />
                   {wishlisted ? "Saved to Wishlist" : "Add to Wishlist"}
@@ -548,16 +544,30 @@ export default function ProductDetails() {
                   onClick={openReportModal}
                   className="w-full py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-500 hover:bg-red-50 flex items-center justify-center gap-2 transition-all"
                 >
-                  <Flag size={15} />
+                  <Flag size={14} />
                   Report this listing
                 </button>
               )}
+
+              {/* Trust badges — mobile only, shown here */}
+              <div className="sm:hidden flex items-center gap-3 text-xs text-gray-400 pt-1 border-t border-gray-50">
+                <div className="flex items-center gap-1">
+                  <Shield size={12} className="text-emerald-500" />
+                  Secure transaction
+                </div>
+                <span>·</span>
+                <div className="flex items-center gap-1">
+                  <BadgeCheck size={12} className="text-emerald-500" />
+                  Verified seller
+                </div>
+              </div>
             </div>
 
+            {/* Seller info */}
             {product.sellerInfo && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5">
                 <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <User size={14} className="text-emerald-500" />
+                  <User size={13} className="text-emerald-500" />
                   Seller Information
                 </h2>
                 <div className="flex flex-col gap-2.5">
@@ -574,25 +584,23 @@ export default function ProductDetails() {
                       </div>
                     </div>
                   )}
-
                   {product.sellerInfo.email && (
-                    <div className="flex items-center gap-2.5 text-sm">
+                    <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                        <Mail size={13} className="text-blue-500" />
+                        <Mail size={12} className="text-blue-500" />
                       </div>
                       <a
                         href={`mailto:${product.sellerInfo.email}`}
-                        className="text-gray-500 hover:text-blue-600 transition-colors text-xs"
+                        className="text-gray-500 hover:text-blue-600 transition-colors text-xs truncate"
                       >
                         {product.sellerInfo.email}
                       </a>
                     </div>
                   )}
-
                   {product.sellerInfo.phone && (
-                    <div className="flex items-center gap-2.5 text-sm">
+                    <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                        <Phone size={13} className="text-emerald-500" />
+                        <Phone size={12} className="text-emerald-500" />
                       </div>
                       <a
                         href={`tel:${product.sellerInfo.phone}`}
@@ -608,10 +616,11 @@ export default function ProductDetails() {
           </div>
         </div>
 
+        {/* Description */}
         {product.description && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5">
             <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <BadgeCheck size={15} className="text-emerald-400" />
+              <BadgeCheck size={14} className="text-emerald-400" />
               Product Description
             </h2>
             <p className="text-sm text-gray-500 leading-relaxed whitespace-pre-line">
@@ -624,7 +633,7 @@ export default function ProductDetails() {
           onClick={() => router.back()}
           className="flex items-center gap-2 text-sm text-gray-400 hover:text-emerald-600 transition-colors w-fit pb-6"
         >
-          <ArrowLeft size={15} />
+          <ArrowLeft size={14} />
           Back to products
         </button>
       </div>

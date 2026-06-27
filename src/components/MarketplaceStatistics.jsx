@@ -60,21 +60,21 @@ const cardVariants = {
 
 export default function MarketplaceStatistics() {
   return (
-    <section className="w-full bg-gray-50 py-20 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12">
+    <section className="w-full bg-gray-50 py-14 sm:py-20 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
         {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="text-center mb-14"
+          className="text-center mb-10 sm:mb-14"
         >
-          <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900">
             Marketplace Statistics
           </h2>
-          <p className="mt-4 text-gray-600 text-lg max-w-2xl mx-auto">
-            A quick snapshot of what’s happening across the platform in real
+          <p className="mt-3 sm:mt-4 text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
+            A quick snapshot of what&apos;s happening across the platform in real
             time.
           </p>
         </motion.div>
@@ -85,7 +85,7 @@ export default function MarketplaceStatistics() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
         >
           {STATS.map((stat, index) => {
             const Icon = stat.icon;
@@ -96,22 +96,22 @@ export default function MarketplaceStatistics() {
                 variants={cardVariants}
                 whileHover={{ scale: 1.05, y: -4 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow text-center"
+                className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-8 shadow-sm hover:shadow-md transition-shadow text-center"
               >
                 {/* Icon */}
                 <div
-                  className={`w-14 h-14 mx-auto flex items-center justify-center rounded-full ${stat.bg}`}
+                  className={`w-11 h-11 sm:w-14 sm:h-14 mx-auto flex items-center justify-center rounded-full ${stat.bg}`}
                 >
-                  <Icon className={stat.color} size={24} />
+                  <Icon className={stat.color} size={20} />
                 </div>
 
                 {/* Value */}
-                <h3 className="mt-5 text-3xl font-extrabold text-gray-900">
+                <h3 className="mt-3 sm:mt-5 text-xl sm:text-3xl font-extrabold text-gray-900">
                   {stat.value}
                 </h3>
 
                 {/* Label */}
-                <p className="mt-2 text-gray-600 text-sm">{stat.label}</p>
+                <p className="mt-1 sm:mt-2 text-gray-600 text-xs sm:text-sm">{stat.label}</p>
               </motion.div>
             );
           })}

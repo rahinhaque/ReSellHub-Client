@@ -149,7 +149,7 @@ function PaymentRow({ payment }) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="bg-gray-50 rounded-xl p-3">
               <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">
                 Amount
@@ -262,7 +262,7 @@ function SummaryCards({ payments }) {
   const totalCount = payments.length;
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div className="bg-white rounded-2xl border border-gray-100 p-4">
         <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
           Total spent

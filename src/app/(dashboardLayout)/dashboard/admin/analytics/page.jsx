@@ -87,7 +87,7 @@ function EmptyChart({ message = "No data yet." }) {
 function Skeleton() {
   return (
     <div className="flex flex-col gap-6 animate-pulse">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 h-28" />
         ))}
@@ -155,7 +155,7 @@ export default function AdminAnalytics() {
       {loading ? <Skeleton /> : (
         <>
           {/* ── Stat cards ── */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <StatCard
               icon={Users}
               label="Total users"

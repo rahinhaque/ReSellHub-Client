@@ -199,7 +199,7 @@ const ManageUsersPage = () => {
         ) : (
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-left">
+              <table className="min-w-full text-left whitespace-nowrap">
                 <thead className="bg-slate-50">
                   <tr className="border-b border-slate-200">
                     <th className="px-6 py-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">

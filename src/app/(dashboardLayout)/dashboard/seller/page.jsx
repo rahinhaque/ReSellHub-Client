@@ -188,7 +188,7 @@ export default function SellerOverview() {
       />
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {loading
           ? [1, 2, 3, 4].map((i) => <StatCardSkeleton key={i} />)
           : cards.map((card) => <StatCard key={card.label} {...card} />)}
@@ -267,7 +267,7 @@ export default function SellerOverview() {
       </div>
 
       {/* Quick links */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Link
           href="/dashboard/seller/products/add"
           className="bg-emerald-600 hover:bg-emerald-700 transition-colors rounded-2xl p-4 flex items-center justify-between group"

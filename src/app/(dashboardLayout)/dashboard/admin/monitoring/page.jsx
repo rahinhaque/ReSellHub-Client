@@ -155,7 +155,7 @@ function TransactionCard({ payment }) {
       {expanded && (
         <div className="border-t border-gray-50 px-5 py-4 flex flex-col gap-4">
           {/* Buyer & Seller */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="bg-gray-50 rounded-xl p-3">
               <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-2">
                 Buyer
@@ -202,7 +202,7 @@ function TransactionCard({ payment }) {
           </div>
 
           {/* Details grid */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="bg-gray-50 rounded-xl p-3">
               <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">
                 Amount
@@ -393,7 +393,7 @@ export default function AdminPaymentMonitoring() {
 
       {/* Stat cards */}
       {data && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <StatCard
             icon={TrendingUp}
             label="Total revenue"

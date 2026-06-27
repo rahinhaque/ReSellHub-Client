@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { RefreshCw, Mail, Eye, EyeOff, ArrowRight } from "lucide-react";
@@ -26,9 +26,9 @@ function isBlockedError(error) {
   return haystack.includes("blocked");
 }
 
-export default function LoginPage() {
+// ── Inner component that uses useSearchParams ──────────────────────────────
+function LoginContent() {
   const router = useRouter();
-
   const searchParams = useSearchParams();
 
   const [form, setForm] = useState({ email: "", password: "" });
@@ -108,7 +108,7 @@ export default function LoginPage() {
           {/* Top accent strip */}
           <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-green-700" />
 
-          <div className="px-8 sm:px-10 py-10">
+          <div className="px-6 sm:px-10 py-8 sm:py-10">
             {/* Header */}
             <div className="flex flex-col items-center text-center mb-8">
               <Link href="/" className="flex items-center gap-2 mb-6 group">
@@ -124,11 +124,11 @@ export default function LoginPage() {
                   </span>
                 </div>
               </Link>
-              <h1 className="text-2xl font-extrabold text-gray-900 mb-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-1">
                 Welcome back
               </h1>
               <p className="text-sm text-gray-500">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link
                   href="/register"
                   className="text-green-700 font-semibold hover:underline"
@@ -320,5 +320,20 @@ export default function LoginPage() {
         </p>
       </motion.div>
     </div>
+  );
+}
+
+// ── Default export: wraps LoginContent in Suspense ─────────────────────────
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#f2f5f0] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
