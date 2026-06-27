@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { signUp } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { motion } from "motion/react";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -203,7 +204,12 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-[#f2f5f0] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-2xl">
+      <motion.div
+        initial={{ opacity: 0, y: 35, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 100, damping: 16 }}
+        className="w-full max-w-2xl"
+      >
         {/* ── Card ── */}
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
           {/* Top accent strip */}
@@ -513,7 +519,7 @@ export default function RegisterPage() {
         <p className="text-center text-xs text-gray-400 mt-6">
           © {new Date().getFullYear()} ReSell Hub · All rights reserved.
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }

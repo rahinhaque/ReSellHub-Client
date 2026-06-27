@@ -1,6 +1,7 @@
 "use client";
 
 import { Package, Users, ShoppingCart, CheckCircle } from "lucide-react";
+import { motion } from "motion/react";
 
 const STATS = [
   {
@@ -33,12 +34,42 @@ const STATS = [
   },
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, scale: 0.9, y: 20 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+};
+
 export default function MarketplaceStatistics() {
   return (
-    <section className="w-full bg-gray-50 py-20">
+    <section className="w-full bg-gray-50 py-20 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Heading */}
-        <div className="text-center mb-14">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="text-center mb-14"
+        >
           <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900">
             Marketplace Statistics
           </h2>
@@ -46,17 +77,26 @@ export default function MarketplaceStatistics() {
             A quick snapshot of what’s happening across the platform in real
             time.
           </p>
-        </div>
+        </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
           {STATS.map((stat, index) => {
             const Icon = stat.icon;
 
             return (
-              <div
+              <motion.div
                 key={index}
-                className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm hover:shadow-md transition text-center"
+                variants={cardVariants}
+                whileHover={{ scale: 1.05, y: -4 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow text-center"
               >
                 {/* Icon */}
                 <div
@@ -72,10 +112,10 @@ export default function MarketplaceStatistics() {
 
                 {/* Label */}
                 <p className="mt-2 text-gray-600 text-sm">{stat.label}</p>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

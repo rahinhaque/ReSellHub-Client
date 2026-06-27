@@ -1,6 +1,7 @@
 "use client";
 
 import { Star, ShieldCheck, BadgeCheck, ArrowRight } from "lucide-react";
+import { motion } from "motion/react";
 
 const SELLERS = [
   {
@@ -29,6 +30,29 @@ const SELLERS = [
   },
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 25 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 90,
+      damping: 14,
+    },
+  },
+};
+
 function Rating() {
   return (
     <div className="flex items-center gap-1 text-amber-500">
@@ -41,10 +65,16 @@ function Rating() {
 
 export default function TrustedSellersShowcase() {
   return (
-    <section className="w-full bg-gray-50 py-20">
+    <section className="w-full bg-gray-50 py-20 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Heading */}
-        <div className="text-center mb-14">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="text-center mb-14"
+        >
           <span className="inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-1 text-sm font-semibold text-green-700">
             <ShieldCheck size={16} />
             Trusted Sellers
@@ -58,14 +88,23 @@ export default function TrustedSellersShowcase() {
             Buy with confidence from highly rated sellers known for quality
             products, quick responses, and excellent customer experiences.
           </p>
-        </div>
+        </motion.div>
 
         {/* Seller Cards */}
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+        >
           {SELLERS.map((seller, index) => (
-            <div
+            <motion.div
               key={index}
-              className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+              variants={cardVariants}
+              whileHover={{ scale: 1.03, y: -4 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm hover:shadow-md transition-shadow"
             >
               {/* Badge */}
               <div className="flex justify-end">
@@ -77,9 +116,13 @@ export default function TrustedSellersShowcase() {
 
               {/* Avatar */}
               <div className="mt-2 flex justify-center">
-                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100 text-3xl font-bold text-green-700">
+                <motion.div
+                  whileHover={{ scale: 1.08 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                  className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100 text-3xl font-bold text-green-700 cursor-pointer shadow-inner"
+                >
                   {seller.name.charAt(0)}
-                </div>
+                </motion.div>
               </div>
 
               {/* Info */}
@@ -105,16 +148,26 @@ export default function TrustedSellersShowcase() {
               </div>
 
               {/* Button */}
-              <button className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-green-700 px-5 py-3 font-semibold text-white transition hover:bg-green-800">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-green-700 px-5 py-3 font-semibold text-white transition hover:bg-green-800 shadow-sm"
+              >
                 View Profile
                 <ArrowRight size={16} />
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Bottom CTA */}
-        <div className="mt-16 rounded-3xl bg-white border border-gray-100 p-10 text-center shadow-sm">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mt-16 rounded-3xl bg-white border border-gray-100 p-10 text-center shadow-sm"
+        >
           <h3 className="text-3xl font-bold text-gray-900">
             Become a Trusted Seller
           </h3>
@@ -124,11 +177,15 @@ export default function TrustedSellersShowcase() {
             great communication, and earning positive reviews from buyers.
           </p>
 
-          <button className="mt-8 inline-flex items-center gap-2 rounded-full bg-green-700 px-6 py-3 font-semibold text-white transition hover:bg-green-800">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-green-700 px-6 py-3 font-semibold text-white transition hover:bg-green-800 shadow-md"
+          >
             Start Selling
             <ArrowRight size={18} />
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     </section>
   );

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { RefreshCw, Mail, Phone, MapPin, ArrowUpRight } from "lucide-react";
+import { motion } from "motion/react";
 
 import {
   FaFacebookF,
@@ -71,7 +72,13 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-950 text-gray-400">
+    <motion.footer
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="bg-gray-950 text-gray-400 overflow-hidden"
+    >
       {/* ── Top CTA bar ── */}
       <div className="border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -83,13 +90,18 @@ export default function Footer() {
               List your first item for free — it takes under 2 minutes.
             </p>
           </div>
-          <Link
-            href="/dashboard/listings/new"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors shrink-0"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            Create a listing
-            <ArrowUpRight size={16} />
-          </Link>
+            <Link
+              href="/dashboard/listings/new"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors shrink-0 shadow-sm"
+            >
+              Create a listing
+              <ArrowUpRight size={16} />
+            </Link>
+          </motion.div>
         </div>
       </div>
 
@@ -121,15 +133,20 @@ export default function Footer() {
             {/* Social icons */}
             <div className="flex items-center gap-3">
               {SOCIAL_LINKS.map(({ name, href, icon: Icon }) => (
-                <Link
+                <motion.div
                   key={name}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-700 text-gray-400 transition-all duration-300 hover:border-blue-500 hover:bg-blue-500 hover:text-white"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  whileTap={{ scale: 0.9 }}
                 >
-                  <Icon size={18} />
-                </Link>
+                  <Link
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-700 text-gray-400 transition-all duration-300 hover:border-blue-500 hover:bg-blue-500 hover:text-white"
+                  >
+                    <Icon size={18} />
+                  </Link>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -242,13 +259,18 @@ export default function Footer() {
               </p>
               <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map((cat) => (
-                  <Link
+                  <motion.div
                     key={cat}
-                    href={`/categories/${cat.toLowerCase().replace(/\s+/g, "-")}`}
-                    className="text-xs px-2.5 py-1 rounded-md bg-gray-800 text-gray-400 hover:bg-emerald-900 hover:text-emerald-300 transition-colors border border-gray-700 hover:border-emerald-800"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    {cat}
-                  </Link>
+                    <Link
+                      href={`/categories/${cat.toLowerCase().replace(/\s+/g, "-")}`}
+                      className="inline-block text-xs px-2.5 py-1 rounded-md bg-gray-800 text-gray-400 hover:bg-emerald-900 hover:text-emerald-300 transition-colors border border-gray-700 hover:border-emerald-800"
+                    >
+                      {cat}
+                    </Link>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -281,6 +303,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-    </footer>
+    </motion.footer>
   );
 }

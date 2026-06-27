@@ -3,6 +3,30 @@
 import { useEffect, useState, useRef } from "react";
 import { serverFetch } from "@/lib/api/server";
 import Link from "next/link";
+import { motion } from "motion/react";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.04,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 90,
+      damping: 14,
+    },
+  },
+};
 import {
   Search,
   SlidersHorizontal,
@@ -68,10 +92,15 @@ function ProductCard({ product }) {
   const conditionKey = product.condition || "used";
 
   return (
-    <Link
-      href={`/products/${product._id}`}
-      className="group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-100 transition-all duration-200 flex flex-col overflow-hidden"
+    <motion.div
+      whileHover={{ y: -6, scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className="h-full flex w-full"
     >
+      <Link
+        href={`/products/${product._id}`}
+        className="group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-100 transition-all duration-200 flex flex-col overflow-hidden w-full"
+      >
       <div className="w-full h-48 bg-gray-100 overflow-hidden">
         {coverImage && !imgError ? (
           <img
@@ -121,6 +150,7 @@ function ProductCard({ product }) {
         )}
       </div>
     </Link>
+    </motion.div>
   );
 }
 
@@ -499,11 +529,18 @@ export default function AllProducts() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
               {products.map((product) => (
-                <ProductCard key={product._id} product={product} />
+                <motion.div key={product._id} variants={itemVariants}>
+                  <ProductCard product={product} />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
 
             {/* Pagination */}
             <Pagination

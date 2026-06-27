@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "motion/react";
 import {
   ShoppingBag,
   Tag,
@@ -45,6 +46,29 @@ const FEATURES = [
   { icon: Leaf, label: "Sustainable & Eco-friendly" },
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 25, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 90,
+      damping: 14,
+    },
+  },
+};
+
 export default function HeroBanner() {
   return (
     <section className="relative w-full overflow-hidden bg-[#f0f5ef]">
@@ -59,46 +83,76 @@ export default function HeroBanner() {
         <div className="grid lg:grid-cols-2 items-center min-h-[85vh] gap-12 py-16">
 
           {/* LEFT CONTENT */}
-          <div className="z-10">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="z-10"
+          >
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 backdrop-blur border border-green-200 text-green-700 text-sm font-medium mb-6">
+            <motion.div
+              variants={itemVariants}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 backdrop-blur border border-green-200 text-green-700 text-sm font-medium mb-6"
+            >
               <Leaf size={14} />
               Buy Smart. Sell Easy. Live Sustainable.
-            </div>
+            </motion.div>
 
             {/* Heading */}
-            <h1 className="text-5xl lg:text-6xl font-extrabold leading-tight text-gray-900">
+            <motion.h1
+              variants={itemVariants}
+              className="text-5xl lg:text-6xl font-extrabold leading-tight text-gray-900"
+            >
               Buy, Sell & Save
               <br />
               <span className="text-green-600">with ReSell Hub</span>
-            </h1>
+            </motion.h1>
 
-            <p className="mt-5 text-gray-600 text-lg max-w-md">
+            <motion.p
+              variants={itemVariants}
+              className="mt-5 text-gray-600 text-lg max-w-md"
+            >
               Your trusted marketplace for pre-owned items. Great deals, real
               people, and a cleaner planet.
-            </p>
+            </motion.p>
 
             {/* Buttons */}
-            <div className="flex flex-wrap gap-4 mt-8">
-              <Link
-                href="/products"
-                className="inline-flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white px-7 py-3.5 rounded-full font-semibold shadow-lg transition"
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-wrap gap-4 mt-8"
+            >
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <ShoppingBag size={16} />
-                Shop Now
-              </Link>
+                <Link
+                  href="/products"
+                  className="inline-flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white px-7 py-3.5 rounded-full font-semibold shadow-lg transition"
+                >
+                  <ShoppingBag size={16} />
+                  Shop Now
+                </Link>
+              </motion.div>
 
-              <Link
-                href="/dashboard/listings/new"
-                className="inline-flex items-center gap-2 border-2 border-green-700 text-green-700 hover:bg-green-50 px-7 py-3.5 rounded-full font-semibold transition"
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Tag size={16} />
-                Sell Your Item
-              </Link>
-            </div>
+                <Link
+                  href="/dashboard/listings/new"
+                  className="inline-flex items-center gap-2 border-2 border-green-700 text-green-700 hover:bg-green-50 px-7 py-3.5 rounded-full font-semibold transition"
+                >
+                  <Tag size={16} />
+                  Sell Your Item
+                </Link>
+              </motion.div>
+            </motion.div>
 
             {/* Features */}
-            <div className="flex flex-wrap gap-6 mt-10">
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-wrap gap-6 mt-10"
+            >
               {FEATURES.map(({ icon: Icon, label }) => (
                 <div
                   key={label}
@@ -110,12 +164,25 @@ export default function HeroBanner() {
                   {label}
                 </div>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* RIGHT IMAGE (CLEAN VERSION - FIXED QUALITY) */}
-          <div className="relative flex justify-center lg:justify-end">
-            <div className="relative w-full max-w-[600px] h-[520px] lg:h-[600px]">
+          {/* RIGHT IMAGE (FLOAT ANIMATION) */}
+          <motion.div
+            initial={{ opacity: 0, x: 50, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            className="relative flex justify-center lg:justify-end"
+          >
+            <motion.div
+              animate={{ y: [0, -15, 0] }}
+              transition={{
+                repeat: Infinity,
+                duration: 4,
+                ease: "easeInOut",
+              }}
+              className="relative w-full max-w-[600px] h-[520px] lg:h-[600px]"
+            >
               <Image
                 src="/images/hero-banner.png"
                 alt="ReSell Hub Hero Banner"
@@ -124,12 +191,18 @@ export default function HeroBanner() {
                 className="object-contain drop-shadow-2xl"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
 
         {/* STATS */}
-        <div className="pb-14">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="pb-14"
+        >
           <div className="bg-white rounded-2xl shadow-md border border-gray-100 grid grid-cols-2 md:grid-cols-4">
             {STATS.map(({ icon: Icon, value, label, sub }) => (
               <div
@@ -148,7 +221,7 @@ export default function HeroBanner() {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

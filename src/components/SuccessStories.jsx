@@ -1,6 +1,7 @@
 "use client";
 
 import { Star, Quote, ArrowRight } from "lucide-react";
+import { motion } from "motion/react";
 
 const STORIES = [
   {
@@ -29,6 +30,29 @@ const STORIES = [
   },
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 90,
+      damping: 14,
+    },
+  },
+};
+
 function Stars({ count }) {
   return (
     <div className="flex gap-1 text-yellow-500">
@@ -41,10 +65,16 @@ function Stars({ count }) {
 
 export default function SuccessStories() {
   return (
-    <section className="w-full bg-white py-20">
+    <section className="w-full bg-white py-20 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Heading */}
-        <div className="text-center mb-14">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="text-center mb-14"
+        >
           <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900">
             Success Stories
           </h2>
@@ -52,14 +82,23 @@ export default function SuccessStories() {
             Real experiences from people who buy and sell on ReSell Hub every
             day.
           </p>
-        </div>
+        </motion.div>
 
         {/* Cards */}
-        <div className="grid md:grid-cols-3 gap-8">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className="grid md:grid-cols-3 gap-8"
+        >
           {STORIES.map((story, index) => (
-            <div
+            <motion.div
               key={index}
-              className="relative bg-gray-50 border border-gray-100 rounded-2xl p-8 shadow-sm hover:shadow-md transition"
+              variants={cardVariants}
+              whileHover={{ scale: 1.025, y: -4 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="relative bg-gray-50 border border-gray-100 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow"
             >
               {/* Quote icon */}
               <Quote
@@ -92,18 +131,28 @@ export default function SuccessStories() {
 
                 <ArrowRight className="text-gray-400" size={18} />
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-14">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="text-center mt-14"
+        >
           <p className="text-gray-600 mb-4">Want to share your experience?</p>
-          <button className="inline-flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-full font-semibold transition">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-full font-semibold transition shadow-md"
+          >
             Share Your Story
             <ArrowRight size={16} />
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     </section>
   );

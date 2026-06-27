@@ -2,6 +2,30 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "motion/react";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 30, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 90,
+      damping: 14,
+    },
+  },
+};
 
 const FeaturedProducts = () => {
   const [products, setProducts] = useState([]);
@@ -35,7 +59,13 @@ const FeaturedProducts = () => {
   return (
     <section className="bg-white py-16 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8"
+        >
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">
               Featured
@@ -46,13 +76,18 @@ const FeaturedProducts = () => {
             <div className="mt-3 h-1 w-20 rounded-full bg-emerald-500" />
           </div>
 
-          <Link
-            href="/products"
-            className="inline-flex items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 hover:border-emerald-300"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            View all products
-          </Link>
-        </div>
+            <Link
+              href="/products"
+              className="inline-flex items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 hover:border-emerald-300"
+            >
+              View all products
+            </Link>
+          </motion.div>
+        </motion.div>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -79,63 +114,76 @@ const FeaturedProducts = () => {
             No featured products found.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
             {products.map((product) => (
-              <Link
+              <motion.div
                 key={product._id}
-                href={`/products/${product._id}`}
-                className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+                variants={itemVariants}
+                whileHover={{ y: -6, scale: 1.015 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="h-full"
               >
-                <div className="relative h-56 bg-slate-100 overflow-hidden">
-                  {Array.isArray(product.images) &&
-                  product.images.length > 0 ? (
-                    <img
-                      src={product.images[0]}
-                      alt={product.title || "Product"}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : product.productImage ? (
-                    <img
-                      src={product.productImage}
-                      alt={product.title || "Product"}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-slate-400">
-                      No image
+                <Link
+                  href={`/products/${product._id}`}
+                  className="group block h-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-shadow"
+                >
+                  <div className="relative h-56 bg-slate-100 overflow-hidden">
+                    {Array.isArray(product.images) &&
+                    product.images.length > 0 ? (
+                      <img
+                        src={product.images[0]}
+                        alt={product.title || "Product"}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : product.productImage ? (
+                      <img
+                        src={product.productImage}
+                        alt={product.title || "Product"}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                        No image
+                      </div>
+                    )}
+
+                    <div className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm">
+                      Latest
                     </div>
-                  )}
-
-                  <div className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm">
-                    Latest
                   </div>
-                </div>
 
-                <div className="p-5">
-                  <h3 className="line-clamp-2 text-base font-semibold text-slate-900">
-                    {product.title ||
-                      product.productTitle ||
-                      "Untitled product"}
-                  </h3>
+                  <div className="p-5">
+                    <h3 className="line-clamp-2 text-base font-semibold text-slate-900">
+                      {product.title ||
+                        product.productTitle ||
+                        "Untitled product"}
+                    </h3>
 
-                  <div className="mt-3 flex items-center justify-between">
-                    <p className="text-lg font-bold text-emerald-600">
-                      ৳{Number(product.price || 0).toLocaleString()}
+                    <div className="mt-3 flex items-center justify-between">
+                      <p className="text-lg font-bold text-emerald-600">
+                        ৳{Number(product.price || 0).toLocaleString()}
+                      </p>
+                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                        {product.category || "Uncategorized"}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 h-px w-full bg-slate-100" />
+
+                    <p className="mt-3 text-sm text-slate-500">
+                      {product.status || "available"}
                     </p>
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                      {product.category || "Uncategorized"}
-                    </span>
                   </div>
-
-                  <div className="mt-4 h-px w-full bg-slate-100" />
-
-                  <p className="mt-3 text-sm text-slate-500">
-                    {product.status || "available"}
-                  </p>
-                </div>
-              </Link>
+                </Link>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
     </section>

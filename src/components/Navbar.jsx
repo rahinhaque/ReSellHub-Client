@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth-client";
@@ -71,7 +72,12 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm">
+    <motion.header
+      initial={{ y: -80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="sticky top-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* ── Logo ── */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
@@ -127,41 +133,47 @@ export default function Navbar() {
               />
             </button>
 
-            {catOpen && (
-              <div
-                className="absolute left-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50"
-                role="menu"
-              >
-                {CATEGORIES.map(({ label, color }) => (
+            <AnimatePresence>
+              {catOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50"
+                  role="menu"
+                >
+                  {CATEGORIES.map(({ label, color }) => (
+                    <Link
+                      key={label}
+                      href={`/categories/${label.toLowerCase().replace(/\s+/g, "-")}`}
+                      className="flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      role="menuitem"
+                      onClick={() => setCatOpen(false)}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ background: color }}
+                      />
+                      {label}
+                    </Link>
+                  ))}
+                  <div className="my-1.5 mx-3 border-t border-gray-100" />
                   <Link
-                    key={label}
-                    href={`/categories/${label.toLowerCase().replace(/\s+/g, "-")}`}
-                    className="flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    href="/categories"
+                    className="flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm font-medium text-emerald-600 hover:bg-emerald-50 transition-colors"
                     role="menuitem"
                     onClick={() => setCatOpen(false)}
                   >
-                    <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ background: color }}
+                    <i
+                      className="ti ti-layout-grid text-base"
+                      aria-hidden="true"
                     />
-                    {label}
+                    View all categories
                   </Link>
-                ))}
-                <div className="my-1.5 mx-3 border-t border-gray-100" />
-                <Link
-                  href="/categories"
-                  className="flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm font-medium text-emerald-600 hover:bg-emerald-50 transition-colors"
-                  role="menuitem"
-                  onClick={() => setCatOpen(false)}
-                >
-                  <i
-                    className="ti ti-layout-grid text-base"
-                    aria-hidden="true"
-                  />
-                  View all categories
-                </Link>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Dashboard — logged-in only, role-aware href */}
@@ -221,118 +233,124 @@ export default function Navbar() {
                 )}
               </button>
 
-              {profileOpen && (
-                <div
-                  className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50"
-                  role="menu"
-                >
-                  {/* User info header */}
-                  <div className="px-4 py-3 border-b border-gray-100 mb-1 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden">
-                      {user.image ? (
-                        <img
-                          src={user.image}
-                          alt={user.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        initials
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
-                        {user.name}
-                      </p>
-                      <span className="text-xs text-gray-500 truncate block">
-                        {user.email}
-                      </span>
-                      {user.role && (
-                        <span
-                          className={`inline-block mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${
-                            user.role === "seller"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : user.role === "admin"
-                                ? "bg-amber-100 text-amber-700"
-                                : "bg-blue-100 text-blue-700"
-                          }`}
-                        >
-                          {user.role}
+              <AnimatePresence>
+                {profileOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50"
+                    role="menu"
+                  >
+                    {/* User info header */}
+                    <div className="px-4 py-3 border-b border-gray-100 mb-1 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden">
+                        {user.image ? (
+                          <img
+                            src={user.image}
+                            alt={user.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          initials
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {user.name}
+                        </p>
+                        <span className="text-xs text-gray-500 truncate block">
+                          {user.email}
                         </span>
-                      )}
+                        {user.role && (
+                          <span
+                            className={`inline-block mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${
+                              user.role === "seller"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : user.role === "admin"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-blue-100 text-blue-700"
+                            }`}
+                          >
+                            {user.role}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Nav items — dashboard link is role-aware */}
-                  {[
-                    { href: "/profile", icon: "ti-user", label: "My profile" },
-                    {
-                      href: dashboardHref,
-                      icon: "ti-layout-dashboard",
-                      label: "Dashboard",
-                    },
-                    {
-                      href: "/dashboard/listings",
-                      icon: "ti-package",
-                      label: "My listings",
-                    },
-                    {
-                      href: "/dashboard/orders",
-                      icon: "ti-shopping-cart",
-                      label: "My orders",
-                    },
-                    { href: "/saved", icon: "ti-heart", label: "Saved items" },
-                  ].map(({ href, icon, label }) => (
+                    {/* Nav items — dashboard link is role-aware */}
+                    {[
+                      { href: "/profile", icon: "ti-user", label: "My profile" },
+                      {
+                        href: dashboardHref,
+                        icon: "ti-layout-dashboard",
+                        label: "Dashboard",
+                      },
+                      {
+                        href: "/dashboard/listings",
+                        icon: "ti-package",
+                        label: "My listings",
+                      },
+                      {
+                        href: "/dashboard/orders",
+                        icon: "ti-shopping-cart",
+                        label: "My orders",
+                      },
+                      { href: "/saved", icon: "ti-heart", label: "Saved items" },
+                    ].map(({ href, icon, label }) => (
+                      <Link
+                        key={href}
+                        href={href}
+                        className={`flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm transition-colors ${
+                          pathname === href || pathname.startsWith(href + "/")
+                            ? "bg-emerald-50 text-emerald-700 font-medium"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                        role="menuitem"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        <i
+                          className={`ti ${icon} text-base ${
+                            pathname === href || pathname.startsWith(href + "/")
+                              ? "text-emerald-600"
+                              : "text-gray-400"
+                          }`}
+                          aria-hidden="true"
+                        />
+                        {label}
+                      </Link>
+                    ))}
+
+                    <div className="my-1.5 mx-3 border-t border-gray-100" />
+
                     <Link
-                      key={href}
-                      href={href}
-                      className={`flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm transition-colors ${
-                        pathname === href || pathname.startsWith(href + "/")
-                          ? "bg-emerald-50 text-emerald-700 font-medium"
-                          : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                      href="/settings"
+                      className="flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       role="menuitem"
                       onClick={() => setProfileOpen(false)}
                     >
                       <i
-                        className={`ti ${icon} text-base ${
-                          pathname === href || pathname.startsWith(href + "/")
-                            ? "text-emerald-600"
-                            : "text-gray-400"
-                        }`}
+                        className="ti ti-settings text-base text-gray-400"
                         aria-hidden="true"
                       />
-                      {label}
+                      Settings
                     </Link>
-                  ))}
 
-                  <div className="my-1.5 mx-3 border-t border-gray-100" />
+                    <div className="my-1.5 mx-3 border-t border-gray-100" />
 
-                  <Link
-                    href="/settings"
-                    className="flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    role="menuitem"
-                    onClick={() => setProfileOpen(false)}
-                  >
-                    <i
-                      className="ti ti-settings text-base text-gray-400"
-                      aria-hidden="true"
-                    />
-                    Settings
-                  </Link>
-
-                  <div className="my-1.5 mx-3 border-t border-gray-100" />
-
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
-                    role="menuitem"
-                    style={{ width: "calc(100% - 12px)" }}
-                  >
-                    <i className="ti ti-logout text-base" aria-hidden="true" />
-                    Log out
-                  </button>
-                </div>
-              )}
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 mx-1.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
+                      role="menuitem"
+                      style={{ width: "calc(100% - 12px)" }}
+                    >
+                      <i className="ti ti-logout text-base" aria-hidden="true" />
+                      Log out
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
 
@@ -356,6 +374,6 @@ export default function Navbar() {
           )}
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }

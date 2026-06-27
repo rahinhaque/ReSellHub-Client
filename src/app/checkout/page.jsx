@@ -1,7 +1,7 @@
 // app/checkout/page.jsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { getProductById } from "@/lib/api/payment/data";
@@ -44,7 +44,7 @@ function Skeleton() {
   );
 }
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session } = useSession();
@@ -315,5 +315,13 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<Skeleton />}>
+      <CheckoutPageContent />
+    </Suspense>
   );
 }

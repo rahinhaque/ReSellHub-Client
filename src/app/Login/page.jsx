@@ -6,6 +6,7 @@ import Link from "next/link";
 import { RefreshCw, Mail, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { signIn } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { motion } from "motion/react";
 
 // Centralized so the "blocked" copy is identical everywhere it can surface:
 // the middleware redirect (?blocked=1) and the sign-in error path.
@@ -96,7 +97,12 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#f2f5f0] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+      <motion.div
+        initial={{ opacity: 0, y: 35, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 100, damping: 16 }}
+        className="w-full max-w-md"
+      >
         {/* ── Card ── */}
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
           {/* Top accent strip */}
@@ -312,7 +318,7 @@ export default function LoginPage() {
         <p className="text-center text-xs text-gray-400 mt-6">
           © {new Date().getFullYear()} ReSell Hub · All rights reserved.
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }
