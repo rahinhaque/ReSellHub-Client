@@ -12,6 +12,8 @@ import {
   ChevronDown,
   X,
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -48,6 +50,8 @@ const conditionLabels = {
   like_new: "Like New",
   refurbished: "Refurbished",
 };
+
+const LIMIT = 10;
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -88,7 +92,6 @@ function ProductCard({ product }) {
         <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-emerald-700 transition-colors leading-snug">
           {product.title || "Untitled product"}
         </h3>
-
         <div className="flex items-center gap-2 text-xs text-gray-400">
           <Tag size={11} />
           <span>{product.category || "—"}</span>
@@ -98,12 +101,9 @@ function ProductCard({ product }) {
             {product.createdAt ? timeAgo(product.createdAt) : "Recently"}
           </span>
         </div>
-
         <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
           <span
-            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-              conditionStyles[conditionKey] || conditionStyles["used"]
-            }`}
+            className={`text-xs font-medium px-2 py-0.5 rounded-full ${conditionStyles[conditionKey] || conditionStyles["used"]}`}
           >
             {conditionLabels[conditionKey] || conditionKey}
           </span>
@@ -111,7 +111,6 @@ function ProductCard({ product }) {
             ৳{Number(product.price).toLocaleString()}
           </span>
         </div>
-
         {product.sellerInfo?.name && (
           <p className="text-xs text-gray-400 truncate">
             by{" "}
@@ -141,6 +140,81 @@ function SkeletonCard() {
   );
 }
 
+// ── Pagination ────────────────────────────────────────────────────────────────
+function Pagination({ page, totalPages, onPageChange }) {
+  if (totalPages <= 1) return null;
+
+  // Build page number array with ellipsis
+  const getPages = () => {
+    if (totalPages <= 7)
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages = [];
+    if (page <= 4) {
+      pages.push(1, 2, 3, 4, 5, "...", totalPages);
+    } else if (page >= totalPages - 3) {
+      pages.push(
+        1,
+        "...",
+        totalPages - 4,
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages,
+      );
+    } else {
+      pages.push(1, "...", page - 1, page, page + 1, "...", totalPages);
+    }
+    return pages;
+  };
+
+  return (
+    <div className="flex items-center justify-center gap-1.5 pt-2">
+      {/* Prev */}
+      <button
+        onClick={() => onPageChange(page - 1)}
+        disabled={page === 1}
+        className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      >
+        <ChevronLeft size={15} className="text-gray-500" />
+      </button>
+
+      {/* Page numbers */}
+      {getPages().map((p, i) =>
+        p === "..." ? (
+          <span
+            key={`ellipsis-${i}`}
+            className="w-9 h-9 flex items-center justify-center text-xs text-gray-400"
+          >
+            …
+          </span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => onPageChange(p)}
+            className={`w-9 h-9 rounded-xl text-xs font-semibold border transition-all ${
+              p === page
+                ? "bg-emerald-600 text-white border-emerald-600"
+                : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+            }`}
+          >
+            {p}
+          </button>
+        ),
+      )}
+
+      {/* Next */}
+      <button
+        onClick={() => onPageChange(page + 1)}
+        disabled={page === totalPages}
+        className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      >
+        <ChevronRight size={15} className="text-gray-500" />
+      </button>
+    </div>
+  );
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AllProducts() {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -150,6 +224,9 @@ export default function AllProducts() {
   const [condition, setCondition] = useState("");
   const [sort, setSort] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const sortRef = useRef(null);
 
   // Close sort dropdown on outside click
@@ -163,7 +240,12 @@ export default function AllProducts() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Fetch whenever filters change
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [category, condition, search, sort]);
+
+  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -173,19 +255,29 @@ export default function AllProducts() {
         if (condition) params.set("condition", condition);
         if (search) params.set("search", search);
         if (sort !== "newest") params.set("sort", sort);
+        params.set("page", page);
+        params.set("limit", LIMIT);
 
         const data = await serverFetch(`/api/products?${params.toString()}`);
-        const raw = Array.isArray(data) ? data : [];
 
-        // Fix duplicate key error — deduplicate by _id
-        const seen = new Set();
-        const deduped = raw.filter((p) => {
-          if (seen.has(p._id)) return false;
-          seen.add(p._id);
-          return true;
-        });
-
-        setProducts(deduped);
+        // Handle both old (array) and new (paginated object) response shapes
+        if (Array.isArray(data)) {
+          setProducts(data);
+          setTotal(data.length);
+          setTotalPages(1);
+        } else {
+          const raw = Array.isArray(data.products) ? data.products : [];
+          // Deduplicate just in case
+          const seen = new Set();
+          const deduped = raw.filter((p) => {
+            if (seen.has(p._id)) return false;
+            seen.add(p._id);
+            return true;
+          });
+          setProducts(deduped);
+          setTotal(data.total || 0);
+          setTotalPages(data.totalPages || 1);
+        }
       } catch (err) {
         console.error("Failed to fetch products:", err);
         setProducts([]);
@@ -195,7 +287,13 @@ export default function AllProducts() {
     };
 
     fetchProducts();
-  }, [category, condition, search, sort]);
+  }, [category, condition, search, sort, page]);
+
+  // Scroll to top on page change
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -212,6 +310,7 @@ export default function AllProducts() {
     setCondition("");
     clearSearch();
     setSort("newest");
+    setPage(1);
   };
 
   const activeFilters = [
@@ -226,6 +325,10 @@ export default function AllProducts() {
       clear: () => setSort("newest"),
     },
   ].filter(Boolean);
+
+  // Pagination range text e.g. "Showing 11–20 of 45"
+  const rangeStart = total === 0 ? 0 : (page - 1) * LIMIT + 1;
+  const rangeEnd = Math.min(page * LIMIT, total);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -243,7 +346,11 @@ export default function AllProducts() {
             Browse Products
           </h1>
           <p className="text-sm text-gray-400 mb-5">
-            {isLoading ? "Loading…" : `${products.length} products available`}
+            {isLoading
+              ? "Loading…"
+              : total > 0
+                ? `Showing ${rangeStart}–${rangeEnd} of ${total} products`
+                : "No products found"}
           </p>
 
           <form onSubmit={handleSearch} className="flex gap-2">
@@ -282,7 +389,6 @@ export default function AllProducts() {
       <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-5">
         {/* Filters row */}
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-          {/* Category pills */}
           <div className="flex gap-2 flex-wrap">
             {CATEGORIES.map((cat) => (
               <button
@@ -300,7 +406,6 @@ export default function AllProducts() {
           </div>
 
           <div className="flex gap-2 flex-shrink-0">
-            {/* Condition */}
             <select
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
@@ -313,7 +418,6 @@ export default function AllProducts() {
               ))}
             </select>
 
-            {/* Sort */}
             <div className="relative" ref={sortRef}>
               <button
                 onClick={() => setSortOpen((v) => !v)}
@@ -376,7 +480,7 @@ export default function AllProducts() {
         {/* Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: LIMIT }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
@@ -394,11 +498,27 @@ export default function AllProducts() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {products.map((product) => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {products.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+
+            {/* Range text below pagination */}
+            {totalPages > 1 && (
+              <p className="text-xs text-gray-400 text-center">
+                Page {page} of {totalPages} · {total} products total
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>
