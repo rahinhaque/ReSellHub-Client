@@ -1,91 +1,65 @@
+// middleware.js
 import { NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
-import { auth } from "@/lib/auth";
-import { MongoClient, ObjectId } from "mongodb";
+import { jwtVerify } from "jose";
 
-// Reuse a single client across invocations instead of connecting fresh on
-// every request — connecting per-request was also masking failures by
-// being slow/error-prone under load.
-let clientPromise;
-function getClient() {
-  if (!clientPromise) {
-    const client = new MongoClient(process.env.MONGODB_URI);
-    clientPromise = client.connect();
-  }
-  return clientPromise;
-}
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+
+const ROLE_ROUTES = {
+  "/dashboard/admin": ["admin"],
+  "/dashboard/seller": ["seller", "admin"],
+  "/dashboard/buyer": ["buyer", "admin"],
+};
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
-  const sessionCookie = getSessionCookie(request);
 
   const isProtectedRoute =
     pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/seller") ||
     pathname.startsWith("/checkout") ||
     pathname.startsWith("/wishlist") ||
     pathname.startsWith("/account");
 
-  // 1. No session cookie & route is protected
+  const sessionCookie = getSessionCookie(request);
+
+  // No session → redirect to login
   if (isProtectedRoute && !sessionCookie) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/Login", request.url));
   }
 
-  // 2. Session exists — verify it's actually valid AND the user is active.
-  if (sessionCookie) {
+  // Has session → check JWT for role-based routing
+  if (sessionCookie && pathname.startsWith("/dashboard")) {
+    const jwtToken = request.cookies.get("jwt_token")?.value;
+
+    if (!jwtToken) {
+      // No JWT yet — session exists but useJwt hasn't fired
+      // Allow through, the dashboard layout will handle it
+      return NextResponse.next();
+    }
+
     try {
-      const session = await auth.api.getSession({ headers: request.headers });
+      const { payload } = await jwtVerify(jwtToken, JWT_SECRET);
+      const role = payload.role;
 
-      if (!session?.user) {
-        const res = NextResponse.redirect(new URL("/login", request.url));
-        res.cookies.delete("better-auth.session_token");
+      // Check expiry
+      if (Date.now() / 1000 > payload.exp) {
+        const res = NextResponse.next();
+        res.cookies.delete("jwt_token");
         return res;
       }
 
-      // Re-fetch the user's status directly from the DB rather than trusting
-      // whatever getSession() returned. getSession() can reflect a stale
-      // snapshot (cookie cache, in-flight request started before an admin
-      // blocked the user, etc). This is the authoritative check.
-      const client = await getClient();
-      const db = client.db("reselll_hub_db");
-      const usersCollection = db.collection("user");
-      const sessionsCollection = db.collection("session");
-
-      let freshUser;
-      try {
-        freshUser = await usersCollection.findOne({
-          _id: new ObjectId(session.user.id),
-        });
-      } catch {
-        freshUser = null;
-      }
-
-      if (!freshUser) {
-        // User no longer exists (deleted) or id mismatch — force re-login.
-        const res = NextResponse.redirect(new URL("/login", request.url));
-        res.cookies.delete("better-auth.session_token");
-        return res;
-      }
-
-      if (freshUser.status === "blocked") {
-        // Invalidate the session immediately so it can't be reused.
-        const sessionToken = request.cookies.get("better-auth.session_token");
-        if (sessionToken?.value) {
-          // better-auth's session collection stores the raw token under
-          // the `token` field (NOT `sessionToken`).
-          await sessionsCollection.deleteOne({ token: sessionToken.value });
+      // Role-based redirect
+      for (const [routePrefix, allowedRoles] of Object.entries(ROLE_ROUTES)) {
+        if (pathname.startsWith(routePrefix) && !allowedRoles.includes(role)) {
+          return NextResponse.redirect(
+            new URL(`/dashboard/${role}`, request.url),
+          );
         }
-        const url = new URL("/login", request.url);
-        url.searchParams.set("blocked", "1");
-        const res = NextResponse.redirect(url);
-        res.cookies.delete("better-auth.session_token");
-        return res;
       }
-    } catch (err) {
-      console.error("Middleware session check failed:", err);
-      const res = NextResponse.redirect(new URL("/login", request.url));
-      res.cookies.delete("better-auth.session_token");
+    } catch {
+      // JWT invalid — clear and allow through
+      const res = NextResponse.next();
+      res.cookies.delete("jwt_token");
       return res;
     }
   }
@@ -96,12 +70,8 @@ export async function middleware(request) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
-    "/admin/:path*",
-    "/seller/:path*",
     "/checkout/:path*",
     "/wishlist/:path*",
     "/account/:path*",
-    "/login",
-    "/register",
   ],
 };

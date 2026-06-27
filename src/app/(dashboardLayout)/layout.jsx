@@ -6,6 +6,7 @@ import DashboardSidebar from "@/components/Dashboardsidebar";
 import Navbar from "@/components/Navbar";
 import { Menu } from "lucide-react";
 
+
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
@@ -26,6 +27,7 @@ export default function DashboardLayout({ children }) {
       document.body.style.overflow = "";
     };
   }, [sidebarOpen]);
+
 
   return (
     <div className="min-h-screen bg-white flex flex-col">

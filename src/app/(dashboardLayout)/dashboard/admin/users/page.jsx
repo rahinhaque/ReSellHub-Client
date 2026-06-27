@@ -11,7 +11,7 @@ import {
   FaSearch,
   FaUsers,
 } from "react-icons/fa";
-import { Loader2, RefreshCw, UserRound, ShieldCheck } from "lucide-react";
+import { Loader2, RefreshCw, UserRound, ShieldCheck, X, AlertTriangle } from "lucide-react";
 
 const ManageUsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -20,6 +20,7 @@ const ManageUsersPage = () => {
   const [loading, setLoading] = useState(true);
   const [mutatingId, setMutatingId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   const fetchUsers = async (silent = false) => {
     try {
@@ -82,15 +83,16 @@ const ManageUsersPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
     try {
       setMutatingId(id);
       await toast.promise(deleteUser(id), {
         loading: "Deleting user...",
-        success: "User deleted!",
+        success: "User deleted successfully!",
         error: "Failed to delete user",
       });
       await fetchUsers(true);
+    } catch (error) {
+      console.error(error);
     } finally {
       setMutatingId(null);
     }
@@ -305,7 +307,7 @@ const ManageUsersPage = () => {
                             </button>
 
                             <button
-                              onClick={() => handleDelete(user._id)}
+                              onClick={() => setUserToDelete(user)}
                               disabled={busy}
                               title="Delete user"
                               className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
@@ -350,6 +352,57 @@ const ManageUsersPage = () => {
           </div>
         )}
       </div>
+
+      {userToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h2 className="text-base font-semibold text-slate-800">
+                Delete User
+              </h2>
+              <button
+                onClick={() => setUserToDelete(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            
+            <div className="px-6 py-5 flex flex-col items-center gap-3 text-center">
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+                <AlertTriangle size={22} className="text-red-400" />
+              </div>
+              <p className="text-sm text-slate-600">
+                Are you sure you want to delete{" "}
+                <span className="font-semibold text-slate-800">
+                  {userToDelete.name || userToDelete.email}
+                </span>
+                ? This action cannot be undone.
+              </p>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-slate-100 flex gap-3">
+              <button
+                onClick={() => setUserToDelete(null)}
+                className="flex-1 text-sm font-medium text-slate-500 border border-slate-200 rounded-xl py-2.5 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const id = userToDelete._id;
+                  setUserToDelete(null);
+                  handleDelete(id);
+                }}
+                className="flex-1 text-sm font-semibold text-white bg-red-500 rounded-xl py-2.5 hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+              >
+                <FaTrash size={14} />
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

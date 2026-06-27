@@ -1,20 +1,32 @@
+// lib/api/server.js
 import { baseUrl } from "./baseUrl";
+import { waitForToken } from "@/lib/hooks/useJwt";
 
 export const serverMutation = async (path, method, data) => {
+  const token = await waitForToken().catch(() => null);
+
   const res = await fetch(`${baseUrl}${path}`, {
-    method: method,
+    method,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(data),
   });
 
   if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-
-  return res.json(); // ← was missing, caused silent failures
+  return res.json();
 };
 
 export const serverFetch = async (path) => {
-   const res = await fetch(`${baseUrl}${path}`);
-   return res.json();
+  const token = await waitForToken().catch(() => null);
+
+  const res = await fetch(`${baseUrl}${path}`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+  return res.json();
 };

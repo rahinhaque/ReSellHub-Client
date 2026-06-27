@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth-client";
 import { Menu, X } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 const CATEGORIES = [
   { label: "Electronics", color: "#1D9E75" },
@@ -211,6 +212,8 @@ export default function Navbar() {
 
         {/* ── Right side ── */}
         <div className="flex items-center gap-2 shrink-0">
+          <ThemeToggle />
+
           {/* Search (desktop/tablet) */}
           <Link
             href="/products?search="

@@ -1,4 +1,3 @@
-// app/checkout/page.jsx
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
@@ -47,7 +46,7 @@ function Skeleton() {
 function CheckoutPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, isPending } = useSession();
   const user = session?.user;
 
   const productId = searchParams.get("productId");
@@ -62,7 +61,7 @@ function CheckoutPageContent() {
       router.push("/products");
       return;
     }
-    const fetch = async () => {
+    const fetchProduct = async () => {
       try {
         const data = await getProductById(productId);
         setProduct(data);
@@ -72,7 +71,7 @@ function CheckoutPageContent() {
         setLoading(false);
       }
     };
-    fetch();
+    fetchProduct();
   }, [productId]);
 
   const handleProceed = async () => {
@@ -80,6 +79,8 @@ function CheckoutPageContent() {
       router.push("/Login");
       return;
     }
+    if (!product) return;
+
     try {
       setPaying(true);
       setError("");
@@ -101,12 +102,18 @@ function CheckoutPageContent() {
 
       window.location.href = url;
     } catch (err) {
-      setError("Could not start checkout. Please try again.");
+      if (err.message === "Not authenticated") {
+        setError("Your session expired. Please log in again.");
+        setTimeout(() => router.push("/Login"), 1500);
+      } else {
+        setError("Could not start checkout. Please try again.");
+      }
       setPaying(false);
     }
   };
 
-  if (loading) return <Skeleton />;
+  // Show skeleton while session or product is loading
+  if (loading || isPending) return <Skeleton />;
 
   if (!product) {
     return (
@@ -198,7 +205,6 @@ function CheckoutPageContent() {
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
             Order summary
           </p>
-
           <div className="flex flex-col gap-2.5">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Product</span>
@@ -289,7 +295,7 @@ function CheckoutPageContent() {
         <div className="flex flex-col gap-2.5 pb-10">
           <button
             onClick={handleProceed}
-            disabled={paying}
+            disabled={paying || !user}
             className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center gap-2.5 transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {paying ? (
