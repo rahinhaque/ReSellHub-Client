@@ -59,7 +59,9 @@ export default function PopularCategory() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/products?limit=100");
+        const res = await fetch(
+          "https://resellhub-server.onrender.com/api/products?limit=100",
+        );
         const json = await res.json();
 
         const products = Array.isArray(json?.products) ? json.products : [];

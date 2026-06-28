@@ -3,14 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
+import { baseUrl } from "@/lib/api/baseUrl"; // ← add this
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-    },
+    transition: { staggerChildren: 0.08 },
   },
 };
 
@@ -19,11 +18,7 @@ const itemVariants = {
   visible: {
     y: 0,
     opacity: 1,
-    transition: {
-      type: "spring",
-      stiffness: 90,
-      damping: 14,
-    },
+    transition: { type: "spring", stiffness: 90, damping: 14 },
   },
 };
 
@@ -37,7 +32,8 @@ const FeaturedProducts = () => {
       try {
         setError("");
 
-        const res = await fetch("http://localhost:5000/api/products?limit=6");
+        // ✅ use baseUrl instead of hardcoded localhost
+        const res = await fetch(`${baseUrl}/api/products?limit=6`);
 
         if (!res.ok) {
           throw new Error(`Failed to fetch products: ${res.status}`);
@@ -76,10 +72,7 @@ const FeaturedProducts = () => {
             <div className="mt-3 h-1 w-20 rounded-full bg-emerald-500" />
           </div>
 
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Link
               href="/products"
               className="inline-flex items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 hover:border-emerald-300"
