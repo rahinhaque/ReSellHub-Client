@@ -2,12 +2,13 @@
 import { useSession, authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { baseUrl } from "@/lib/api/baseUrl"; // ✅ import your baseUrl
+import { baseUrl } from "@/lib/api/baseUrl";
 
 export default function ChooseRolePage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (isPending) return;
@@ -15,29 +16,39 @@ export default function ChooseRolePage() {
       router.push("/Login");
       return;
     }
+    // Already chose role → go to their dashboard
     if (session.user.roleSelected === true) {
-      router.push("/dashboard");
+      const role = session.user.role || "buyer";
+      router.push(`/dashboard/${role}`); // ✅ dynamic
     }
   }, [session, isPending]);
 
   const handleRoleSelect = async (role) => {
-    console.log("baseUrl:", baseUrl); // should print http://localhost:5000
     setLoading(true);
+    setError(null);
     try {
       const email = session.user.email;
 
+      console.log("Using baseUrl:", baseUrl);
+      console.log("Selecting role:", role, "for:", email);
+
       // ── Step 1: Get JWT from Express ──────────────────────────────────────
       const tokenRes = await fetch(`${baseUrl}/api/auth/token`, {
-        // ✅ baseUrl
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
+
+      if (!tokenRes.ok) {
+        const text = await tokenRes.text();
+        throw new Error(`Token fetch failed: ${tokenRes.status} - ${text}`);
+      }
+
       const { token } = await tokenRes.json();
+      console.log("Got token:", !!token);
 
       // ── Step 2: Update role in Express/MongoDB ────────────────────────────
-      await fetch(`${baseUrl}/api/user/set-role`, {
-        // ✅ baseUrl
+      const roleRes = await fetch(`${baseUrl}/api/user/set-role`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -46,16 +57,26 @@ export default function ChooseRolePage() {
         body: JSON.stringify({ email, role, roleSelected: true }),
       });
 
-      // ── Step 3: Update better-auth session user ───────────────────────────
-      await authClient.updateUser({
+      if (!roleRes.ok) {
+        const text = await roleRes.text();
+        throw new Error(`Role update failed: ${roleRes.status} - ${text}`);
+      }
+
+      console.log("Express role updated ✅");
+
+      // ── Step 3: Update better-auth session ───────────────────────────────
+      const updateRes = await authClient.updateUser({
         role,
         roleSelected: true,
       });
 
-      // ── Step 4: Redirect ──────────────────────────────────────────────────
-      router.push(role === "seller" ? "/dashboard/seller" : "/dashboard/buyer");
+      console.log("better-auth user updated ✅", updateRes);
+
+      // ── Step 4: Redirect to correct dashboard ─────────────────────────────
+      router.push(`/dashboard/${role}`); // ✅ dynamic: /dashboard/seller or /dashboard/buyer
     } catch (err) {
       console.error("Role selection failed:", err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -73,6 +94,13 @@ export default function ChooseRolePage() {
     <div className="flex flex-col items-center justify-center min-h-screen gap-6">
       <h1 className="text-2xl font-bold">How will you use ReSelll Hub?</h1>
       <p className="text-gray-500">Choose your account type to get started</p>
+
+      {/* ── Error message ── */}
+      {error && (
+        <p className="text-red-500 text-sm bg-red-50 px-4 py-2 rounded-lg">
+          {error}
+        </p>
+      )}
 
       <div className="flex gap-4">
         <button

@@ -8,13 +8,18 @@ export default function AuthCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    if (isPending) return; // still loading
-    if (!session?.user) return; // not logged in
+    if (isPending) return;
+    if (!session?.user) return;
+
+    console.log("Auth callback - user:", session.user);
+    console.log("roleSelected:", session.user.roleSelected);
 
     if (!session.user.roleSelected) {
       router.push("/choose-role");
     } else {
-      router.push("/dashboard");
+      // ✅ redirect to correct dashboard based on role
+      const role = session.user.role || "buyer";
+      router.push(`/dashboard/${role}`);
     }
   }, [session, isPending]);
 
