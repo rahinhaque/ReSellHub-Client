@@ -8,25 +8,46 @@ import { signIn } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 
-// Centralized so the "blocked" copy is identical everywhere it can surface:
-// the middleware redirect (?blocked=1) and the sign-in error path.
 const BLOCKED_MESSAGE =
   "Your account has been blocked. Please contact support.";
 
-// better-auth's thrown databaseHooks error sometimes reaches the client as
-// "Your account has been blocked..." verbatim, but depending on version it
-// can also come back wrapped (e.g. prefixed, or just the generic
-// "Failed to create session"/500 text with the real reason only in server
-// logs). Checking for "blocked" case-insensitively, and falling back to
-// checking error.code, makes this resilient to either shape instead of
-// relying on an exact string match.
 function isBlockedError(error) {
   if (!error) return false;
   const haystack = `${error.message || ""} ${error.code || ""}`.toLowerCase();
   return haystack.includes("blocked");
 }
 
-// ── Inner component that uses useSearchParams ──────────────────────────────
+function GoogleButton({ onClick, loading }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={loading}
+      className="w-full flex items-center justify-center gap-3 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+    >
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path
+          d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
+          fill="#4285F4"
+        />
+        <path
+          d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"
+          fill="#34A853"
+        />
+        <path
+          d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"
+          fill="#FBBC05"
+        />
+        <path
+          d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.96L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
+          fill="#EA4335"
+        />
+      </svg>
+      {loading ? "Redirecting…" : "Continue with Google"}
+    </button>
+  );
+}
+
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,6 +56,7 @@ function LoginContent() {
   const [showPass, setShowPass] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("blocked") === "1") {
@@ -57,7 +79,6 @@ function LoginContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const errs = validate();
     if (Object.keys(errs).length) {
       setErrors(errs);
@@ -92,7 +113,13 @@ function LoginContent() {
   };
 
   const handleGoogle = async () => {
-    await signIn.social({ provider: "google", callbackURL: "/" });
+    try {
+      setGoogleLoading(true);
+      await signIn.social({ provider: "google", callbackURL: "/" });
+    } catch {
+      setErrors({ form: "Google sign-in failed. Please try again." });
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -103,9 +130,7 @@ function LoginContent() {
         transition={{ type: "spring", stiffness: 100, damping: 16 }}
         className="w-full max-w-md"
       >
-        {/* ── Card ── */}
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-          {/* Top accent strip */}
           <div className="h-1.5 w-full bg-gradient-to-r from-green-400 via-emerald-500 to-green-700" />
 
           <div className="px-6 sm:px-10 py-8 sm:py-10">
@@ -138,35 +163,11 @@ function LoginContent() {
               </p>
             </div>
 
-            {/* Google button */}
-            <button
-              type="button"
-              onClick={handleGoogle}
-              className="w-full flex items-center justify-center gap-3 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 transition-all mb-6"
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path
-                  d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.96L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
-                  fill="#EA4335"
-                />
-              </svg>
-              Continue with Google
-            </button>
+            {/* Google */}
+            <GoogleButton onClick={handleGoogle} loading={googleLoading} />
 
             {/* Divider */}
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 my-6">
               <div className="flex-1 h-px bg-gray-200" />
               <span className="text-xs text-gray-400 font-medium">
                 or sign in with email
@@ -247,7 +248,7 @@ function LoginContent() {
                 )}
               </div>
 
-              {/* Form-level error — blocked users see a distinct red banner */}
+              {/* Form error */}
               {errors.form && (
                 <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
                   <svg
@@ -278,7 +279,7 @@ function LoginContent() {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || googleLoading}
                 className="w-full flex items-center justify-center gap-2 rounded-full bg-green-700 hover:bg-green-800 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed px-6 py-3.5 text-white font-semibold text-sm shadow-md transition-all mt-2"
               >
                 {loading ? (
@@ -306,8 +307,7 @@ function LoginContent() {
                   </>
                 ) : (
                   <>
-                    Sign in
-                    <ArrowRight size={16} />
+                    Sign in <ArrowRight size={16} />
                   </>
                 )}
               </button>
@@ -323,7 +323,6 @@ function LoginContent() {
   );
 }
 
-// ── Default export: wraps LoginContent in Suspense ─────────────────────────
 export default function LoginPage() {
   return (
     <Suspense
