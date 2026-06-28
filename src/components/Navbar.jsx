@@ -204,7 +204,9 @@ export default function Navbar() {
 
         {/* ── Right side ── */}
         <div className="flex items-center gap-2 shrink-0">
-          <ThemeToggle />
+          <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
 
           {/* Search (desktop/tablet) */}
           <Link
@@ -214,15 +216,6 @@ export default function Navbar() {
           >
             <i className="ti ti-search text-base" aria-hidden="true" />
             <span>Search products…</span>
-          </Link>
-
-          {/* Search icon (mobile only) */}
-          <Link
-            href="/products?search="
-            className="sm:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors"
-            aria-label="Search products"
-          >
-            <i className="ti ti-search text-base" aria-hidden="true" />
           </Link>
 
           {/* Loading skeleton */}
