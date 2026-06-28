@@ -84,7 +84,10 @@ export default function RegisterPage() {
       setGoogleLoading(true);
       // Google OAuth handles the full flow — role defaults to "buyer"
       // User can update their role later from profile settings
-      await signIn.social({ provider: "google", callbackURL: "/" });
+      await signIn.social({
+        provider: "google",
+        callbackURL: "/auth-callback",
+      });
     } catch {
       toast.error("Google sign-up failed. Please try again.");
       setGoogleLoading(false);

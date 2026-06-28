@@ -34,13 +34,15 @@ export const auth = betterAuth({
         required: false,
         defaultValue: "active",
       },
+      // ✅ Tracks whether user explicitly chose a role (important for Google login)
+      roleSelected: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+      },
     },
   },
 
-  // IMPORTANT: this app has no separate better-auth `id` field on the user
-  // document — only Mongo's `_id`. better-auth uses `_id` (cast to string)
-  // as the user identifier, and session.userId stores that same string.
-  // Every lookup below MUST use `_id`, never a nonexistent `id` field.
   databaseHooks: {
     session: {
       create: {
@@ -51,7 +53,6 @@ export const auth = betterAuth({
               _id: new ObjectId(session.userId),
             });
           } catch {
-            // session.userId wasn't a valid ObjectId string — treat as not found
             user = null;
           }
 
@@ -67,11 +68,6 @@ export const auth = betterAuth({
     },
   },
 
-  // Also disable/limit the cookie cache so a block takes effect on the very
-  // next request instead of waiting out a cached session window. If you
-  // need the performance win later, re-enable with a short maxAge (e.g. 5s)
-  // and rely on the session-table delete (server.js) + middleware re-check
-  // instead of this hook alone for sub-cache-window freshness.
   session: {
     cookieCache: {
       enabled: false,

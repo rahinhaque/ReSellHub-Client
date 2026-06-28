@@ -17,6 +17,17 @@ export const authClient = createAuthClient({
           required: false,
           defaultValue: "buyer",
         },
+        status: {
+          type: "string",
+          required: false,
+          defaultValue: "active",
+        },
+        // ✅ Added — needed to detect if Google user has chosen a role yet
+        roleSelected: {
+          type: "boolean",
+          required: false,
+          defaultValue: false,
+        },
       },
     }),
   ],

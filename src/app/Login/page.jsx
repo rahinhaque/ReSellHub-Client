@@ -115,7 +115,10 @@ function LoginContent() {
   const handleGoogle = async () => {
     try {
       setGoogleLoading(true);
-      await signIn.social({ provider: "google", callbackURL: "/" });
+      await signIn.social({
+        provider: "google",
+        callbackURL: "/auth-callback",
+      });
     } catch {
       setErrors({ form: "Google sign-in failed. Please try again." });
       setGoogleLoading(false);
