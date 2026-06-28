@@ -114,7 +114,7 @@ export default function RegisterPage() {
       // User can update their role later from profile settings
       await signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: "/auth-callback",
       });
     } catch {
       toast.error("Google sign-up failed. Please try again.");
