@@ -3,9 +3,18 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import {
-  RefreshCw, User, Mail, Phone, Camera,
-  ShoppingBag, Store, Eye, EyeOff, ArrowRight,
-  CheckCircle2, X,
+  RefreshCw,
+  User,
+  Mail,
+  Phone,
+  Camera,
+  ShoppingBag,
+  Store,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  CheckCircle2,
+  X,
 } from "lucide-react";
 import { signUp, signIn } from "@/lib/auth-client";
 import { toast } from "sonner";
@@ -20,10 +29,22 @@ function GoogleButton({ onClick, loading }) {
       className="w-full flex items-center justify-center gap-3 rounded-xl border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
     >
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4" />
-        <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853" />
-        <path d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05" />
-        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.96L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335" />
+        <path
+          d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
+          fill="#4285F4"
+        />
+        <path
+          d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"
+          fill="#34A853"
+        />
+        <path
+          d="M3.964 10.707A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"
+          fill="#FBBC05"
+        />
+        <path
+          d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.96L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
+          fill="#EA4335"
+        />
       </svg>
       {loading ? "Redirecting…" : "Continue with Google"}
     </button>
@@ -32,9 +53,13 @@ function GoogleButton({ onClick, loading }) {
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
-    name: "", email: "", phone: "",
-    password: "", confirmPassword: "",
-    role: "", photo: null,
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+    role: "",
+    photo: null,
   });
 
   const [preview, setPreview] = useState(null);
@@ -70,11 +95,14 @@ export default function RegisterPage() {
     if (!form.email.trim()) e.email = "Email is required.";
     else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Enter a valid email.";
     if (!form.phone.trim()) e.phone = "Phone number is required.";
-    else if (!/^\+?[\d\s\-]{7,15}$/.test(form.phone)) e.phone = "Enter a valid phone number.";
+    else if (!/^\+?[\d\s\-]{7,15}$/.test(form.phone))
+      e.phone = "Enter a valid phone number.";
     if (!form.password) e.password = "Password is required.";
     else if (form.password.length < 8) e.password = "At least 8 characters.";
-    if (!form.confirmPassword) e.confirmPassword = "Please confirm your password.";
-    else if (form.password !== form.confirmPassword) e.confirmPassword = "Passwords do not match.";
+    if (!form.confirmPassword)
+      e.confirmPassword = "Please confirm your password.";
+    else if (form.password !== form.confirmPassword)
+      e.confirmPassword = "Passwords do not match.";
     if (!form.role) e.role = "Choose a role to continue.";
     return e;
   };
@@ -97,7 +125,10 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
 
     setLoading(true);
     const toastId = toast.loading("Creating your account...");
@@ -110,7 +141,7 @@ export default function RegisterPage() {
         imgData.append("image", form.photo);
         const imgRes = await fetch(
           `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`,
-          { method: "POST", body: imgData }
+          { method: "POST", body: imgData },
         );
         if (!imgRes.ok) throw new Error("Image upload failed. Try again.");
         const imgJson = await imgRes.json();
@@ -157,7 +188,13 @@ export default function RegisterPage() {
   })();
 
   const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][strength];
-  const strengthColor = ["", "bg-red-400", "bg-yellow-400", "bg-blue-400", "bg-green-500"][strength];
+  const strengthColor = [
+    "",
+    "bg-red-400",
+    "bg-yellow-400",
+    "bg-blue-400",
+    "bg-green-500",
+  ][strength];
 
   if (submitted) {
     return (
@@ -202,8 +239,12 @@ export default function RegisterPage() {
                   <RefreshCw size={18} className="text-white" />
                 </div>
                 <div className="flex flex-col leading-none text-left">
-                  <span className="font-bold text-gray-900 text-[15px]">ReSell Hub</span>
-                  <span className="text-[10px] text-emerald-600 font-medium tracking-widest uppercase">marketplace</span>
+                  <span className="font-bold text-gray-900 text-[15px]">
+                    ReSell Hub
+                  </span>
+                  <span className="text-[10px] text-emerald-600 font-medium tracking-widest uppercase">
+                    marketplace
+                  </span>
                 </div>
               </Link>
               <h1 className="text-2xl font-extrabold text-gray-900 mb-1">
@@ -211,7 +252,10 @@ export default function RegisterPage() {
               </h1>
               <p className="text-sm text-gray-500">
                 Already have one?{" "}
-                <Link href="/login" className="text-green-700 font-semibold hover:underline">
+                <Link
+                  href="/login"
+                  className="text-green-700 font-semibold hover:underline"
+                >
                   Log in
                 </Link>
               </p>
@@ -228,7 +272,9 @@ export default function RegisterPage() {
             {/* Divider */}
             <div className="flex items-center gap-3 mb-6">
               <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-xs text-gray-400 font-medium">or register with email</span>
+              <span className="text-xs text-gray-400 font-medium">
+                or register with email
+              </span>
               <div className="flex-1 h-px bg-gray-200" />
             </div>
 
@@ -243,11 +289,17 @@ export default function RegisterPage() {
                     aria-label="Upload profile photo"
                   >
                     {preview ? (
-                      <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                      <img
+                        src={preview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <div className="flex flex-col items-center gap-1 text-green-500">
                         <Camera size={26} />
-                        <span className="text-[10px] font-medium">Add photo</span>
+                        <span className="text-[10px] font-medium">
+                          Add photo
+                        </span>
                       </div>
                     )}
                   </button>
@@ -262,13 +314,25 @@ export default function RegisterPage() {
                     </button>
                   )}
                 </div>
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
-                <p className="text-xs text-gray-400">JPG, PNG or GIF · Max 5 MB</p>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePhoto}
+                />
+                <p className="text-xs text-gray-400">
+                  JPG, PNG or GIF · Max 5 MB
+                </p>
               </div>
 
               {/* Name + Email */}
               <div className="grid sm:grid-cols-2 gap-4">
-                <Field label="Full name" icon={<User size={15} />} error={errors.name}>
+                <Field
+                  label="Full name"
+                  icon={<User size={15} />}
+                  error={errors.name}
+                >
                   <input
                     type="text"
                     placeholder="John Doe"
@@ -277,7 +341,11 @@ export default function RegisterPage() {
                     className={inputCls(errors.name)}
                   />
                 </Field>
-                <Field label="Email address" icon={<Mail size={15} />} error={errors.email}>
+                <Field
+                  label="Email address"
+                  icon={<Mail size={15} />}
+                  error={errors.email}
+                >
                   <input
                     type="email"
                     placeholder="you@example.com"
@@ -289,7 +357,11 @@ export default function RegisterPage() {
               </div>
 
               {/* Phone */}
-              <Field label="Phone number" icon={<Phone size={15} />} error={errors.phone}>
+              <Field
+                label="Phone number"
+                icon={<Phone size={15} />}
+                error={errors.phone}
+              >
                 <input
                   type="tel"
                   placeholder="+880 1305-290120"
@@ -306,8 +378,18 @@ export default function RegisterPage() {
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { value: "buyer", icon: ShoppingBag, title: "Buy items", sub: "Browse & purchase products" },
-                    { value: "seller", icon: Store, title: "Sell items", sub: "List & manage products" },
+                    {
+                      value: "buyer",
+                      icon: ShoppingBag,
+                      title: "Buy items",
+                      sub: "Browse & purchase products",
+                    },
+                    {
+                      value: "seller",
+                      icon: Store,
+                      title: "Sell items",
+                      sub: "List & manage products",
+                    },
                   ].map(({ value, icon: Icon, title, sub }) => (
                     <button
                       key={value}
@@ -319,24 +401,35 @@ export default function RegisterPage() {
                           : "border-gray-200 hover:border-green-300 hover:bg-green-50/40"
                       }`}
                     >
-                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
-                        form.role === value ? "bg-green-600 text-white" : "bg-gray-100 text-gray-500"
-                      }`}>
+                      <div
+                        className={`w-11 h-11 rounded-xl flex items-center justify-center ${
+                          form.role === value
+                            ? "bg-green-600 text-white"
+                            : "bg-gray-100 text-gray-500"
+                        }`}
+                      >
                         <Icon size={20} />
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold ${form.role === value ? "text-green-700" : "text-gray-700"}`}>
+                        <p
+                          className={`text-sm font-semibold ${form.role === value ? "text-green-700" : "text-gray-700"}`}
+                        >
                           {title}
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
                       </div>
                       {form.role === value && (
-                        <CheckCircle2 size={16} className="absolute top-2.5 right-2.5 text-green-600" />
+                        <CheckCircle2
+                          size={16}
+                          className="absolute top-2.5 right-2.5 text-green-600"
+                        />
                       )}
                     </button>
                   ))}
                 </div>
-                {errors.role && <p className="mt-1.5 text-xs text-red-500">{errors.role}</p>}
+                {errors.role && (
+                  <p className="mt-1.5 text-xs text-red-500">{errors.role}</p>
+                )}
               </div>
 
               {/* Password */}
@@ -362,14 +455,25 @@ export default function RegisterPage() {
                   <div className="mt-2 space-y-1">
                     <div className="flex gap-1">
                       {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i <= strength ? strengthColor : "bg-gray-200"}`} />
+                        <div
+                          key={i}
+                          className={`h-1 flex-1 rounded-full transition-all ${i <= strength ? strengthColor : "bg-gray-200"}`}
+                        />
                       ))}
                     </div>
                     <p className="text-xs text-gray-500">
                       Strength:{" "}
-                      <span className={`font-semibold ${
-                        strength <= 1 ? "text-red-500" : strength === 2 ? "text-yellow-500" : strength === 3 ? "text-blue-500" : "text-green-600"
-                      }`}>
+                      <span
+                        className={`font-semibold ${
+                          strength <= 1
+                            ? "text-red-500"
+                            : strength === 2
+                              ? "text-yellow-500"
+                              : strength === 3
+                                ? "text-blue-500"
+                                : "text-green-600"
+                        }`}
+                      >
                         {strengthLabel}
                       </span>
                     </p>
@@ -401,9 +505,26 @@ export default function RegisterPage() {
               {/* Form error */}
               {errors.form && (
                 <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
-                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="shrink-0 mt-0.5">
-                    <circle cx="7.5" cy="7.5" r="7" stroke="#ef4444" strokeWidth="1.5" />
-                    <path d="M7.5 4v4M7.5 10.5v.5" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 15 15"
+                    fill="none"
+                    className="shrink-0 mt-0.5"
+                  >
+                    <circle
+                      cx="7.5"
+                      cy="7.5"
+                      r="7"
+                      stroke="#ef4444"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M7.5 4v4M7.5 10.5v.5"
+                      stroke="#ef4444"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
                   </svg>
                   {errors.form}
                 </div>
@@ -412,9 +533,20 @@ export default function RegisterPage() {
               {/* Terms */}
               <p className="text-xs text-gray-400 text-center">
                 By creating an account you agree to our{" "}
-                <Link href="/terms" className="text-green-700 hover:underline font-medium">Terms of Service</Link>{" "}
+                <Link
+                  href="/terms"
+                  className="text-green-700 hover:underline font-medium"
+                >
+                  Terms of Service
+                </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="text-green-700 hover:underline font-medium">Privacy Policy</Link>.
+                <Link
+                  href="/privacy"
+                  className="text-green-700 hover:underline font-medium"
+                >
+                  Privacy Policy
+                </Link>
+                .
               </p>
 
               {/* Submit */}
@@ -429,7 +561,9 @@ export default function RegisterPage() {
                     Creating account...
                   </>
                 ) : (
-                  <>Create account <ArrowRight size={16} /></>
+                  <>
+                    Create account <ArrowRight size={16} />
+                  </>
                 )}
               </button>
             </form>
@@ -447,14 +581,18 @@ export default function RegisterPage() {
 function Field({ label, icon, error, children }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+        {label}
+      </label>
       <div className="relative">
         {icon && (
           <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
             {icon}
           </span>
         )}
-        <div className={icon ? "[&>input]:pl-9 [&>input]:pr-4" : ""}>{children}</div>
+        <div className={icon ? "[&>input]:pl-9 [&>input]:pr-4" : ""}>
+          {children}
+        </div>
       </div>
       {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
     </div>

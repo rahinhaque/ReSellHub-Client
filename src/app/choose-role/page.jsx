@@ -2,13 +2,13 @@
 import { useSession, authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { baseUrl } from "@/lib/api/baseUrl"; // ✅ import your baseUrl
 
 export default function ChooseRolePage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // If already selected a role, skip this page
   useEffect(() => {
     if (isPending) return;
     if (!session?.user) {
@@ -21,23 +21,23 @@ export default function ChooseRolePage() {
   }, [session, isPending]);
 
   const handleRoleSelect = async (role) => {
+    console.log("baseUrl:", baseUrl); // should print http://localhost:5000
     setLoading(true);
     try {
       const email = session.user.email;
 
       // ── Step 1: Get JWT from Express ──────────────────────────────────────
-      const tokenRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/token`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        },
-      );
+      const tokenRes = await fetch(`${baseUrl}/api/auth/token`, {
+        // ✅ baseUrl
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
       const { token } = await tokenRes.json();
 
-      // ── Step 2: Update role in your Express/MongoDB ───────────────────────
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/set-role`, {
+      // ── Step 2: Update role in Express/MongoDB ────────────────────────────
+      await fetch(`${baseUrl}/api/user/set-role`, {
+        // ✅ baseUrl
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -46,15 +46,13 @@ export default function ChooseRolePage() {
         body: JSON.stringify({ email, role, roleSelected: true }),
       });
 
-      // ── Step 3: Also update better-auth's own user record ─────────────────
-      // This makes session.user.role and session.user.roleSelected reflect
-      // the new values immediately
+      // ── Step 3: Update better-auth session user ───────────────────────────
       await authClient.updateUser({
         role,
         roleSelected: true,
       });
 
-      // ── Step 4: Redirect based on chosen role ─────────────────────────────
+      // ── Step 4: Redirect ──────────────────────────────────────────────────
       router.push(role === "seller" ? "/dashboard/seller" : "/dashboard/buyer");
     } catch (err) {
       console.error("Role selection failed:", err);

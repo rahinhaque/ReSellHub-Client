@@ -1,4 +1,3 @@
-// app/auth-callback/page.jsx
 "use client";
 import { useSession } from "@/lib/auth-client";
 import { useEffect } from "react";
@@ -9,18 +8,13 @@ export default function AuthCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    if (isPending) return;
-    if (!session?.user) return;
+    if (isPending) return; // still loading
+    if (!session?.user) return; // not logged in
 
-    console.log("roleSelected:", session.user.roleSelected); // debug
-
-    // roleSelected is false OR undefined → go choose role
     if (!session.user.roleSelected) {
       router.push("/choose-role");
     } else {
-      // Already has a role → go to their dashboard
-      const role = session.user.role || "buyer";
-      router.push(`/dashboard/${role}`);
+      router.push("/dashboard");
     }
   }, [session, isPending]);
 
