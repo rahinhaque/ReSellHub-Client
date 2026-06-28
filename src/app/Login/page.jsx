@@ -117,7 +117,7 @@ function LoginContent() {
       setGoogleLoading(true);
       await signIn.social({
         provider: "google",
-        callbackURL: "/auth-callback",
+        callbackURL: "/",
       });
     } catch {
       setErrors({ form: "Google sign-in failed. Please try again." });
