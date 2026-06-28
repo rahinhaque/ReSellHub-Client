@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# ReSell Hub
 
-## Getting Started
+## Project Purpose
+ReSell Hub is an online marketplace where users can buy and sell pre-owned products safely and efficiently. Users can list products they no longer need, while buyers can browse products, communicate with sellers, and purchase items.
 
-First, run the development server:
+## Live URL
+- **Client Application**: [https://re-sell-hub-client-omega.vercel.app](https://re-sell-hub-client-omega.vercel.app)
+- **Server Application**: [https://resellhub-server.onrender.com/](https://resellhub-server.onrender.com/)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Project Overview & Discussion
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### What is ReSell Hub?
+ReSell Hub is an online marketplace where users can buy and sell pre-owned products safely and efficiently. Users can list products they no longer need, while buyers can browse products, communicate with sellers, and purchase items.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### Why Should We Develop This Project?
+Many people own products that are still usable but no longer needed. This platform helps:
+- Reduce waste
+- Promote sustainable consumption
+- Create opportunities for users to earn money from unused items
+- Help buyers find affordable products
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### How the System Works (Key Features)
+- **Seller Account Management**: Seller creates an account.
+- **Product Listings**: Seller lists products with details and images.
+- **Product Browsing**: Buyers browse available products.
+- **Order Placement**: Buyers can view product details and place orders.
+- **Secure Payments**: Payment is completed through the platform.
+- **Order Management**: Seller manages orders.
+- **Admin Dashboard**: Admin monitors all activities and users.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## NPM Packages Used
+The following key NPM packages are used in this project:
+- **Core Framework**: `next` (v16.2.9), `react` (v19.2.4), `react-dom` (v19.2.4)
+- **Authentication & Security**: `better-auth`, `@better-auth/mongo-adapter`, `jose`
+- **Database**: `mongodb`
+- **Payments**: `stripe`, `@stripe/stripe-js`
+- **UI, Styling & Icons**: `tailwindcss`, `lucide-react`, `react-icons`, `motion` (for animations), `next-themes`
+- **Form Handling**: `react-hook-form`
+- **Data Visualization**: `recharts`
+- **Toast Notifications**: `sonner`
