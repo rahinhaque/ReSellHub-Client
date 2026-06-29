@@ -28,22 +28,19 @@ function timeAgo(dateStr) {
 }
 
 function getCoverImage(product) {
-  if (Array.isArray(product.images) && product.images.length > 0) {
+  if (Array.isArray(product.images) && product.images.length > 0)
     return product.images[0];
-  }
-  if (typeof product.images === "string" && product.images.length > 0) {
+  if (typeof product.images === "string" && product.images.length > 0)
     return product.images;
-  }
   if (
     typeof product.productImage === "string" &&
     product.productImage.length > 0
-  ) {
+  )
     return product.productImage;
-  }
   return null;
 }
 
-// ─── Single management card ──────────────────────────────────────────────────
+// ─── Single card ─────────────────────────────────────────────────────────────
 export function ProductCard({ product, onUpdated, onDeleted }) {
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -51,11 +48,8 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
 
   const { _id, title, price, category, condition, quantity, createdAt } =
     product;
-
   const displayTitle = title || product.productTitle || "Untitled product";
   const coverImage = getCoverImage(product);
-
-  // ✅ Normalize condition key to handle any casing from DB
   const conditionKey = (condition || "used").toLowerCase().replace(/\s+/g, "_");
 
   return (
@@ -84,52 +78,45 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
             <h3 className="text-sm font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-emerald-700 transition-colors">
               {displayTitle}
             </h3>
-
-            {/* Action buttons */}
             <div className="flex items-center gap-2 sm:gap-1.5 flex-wrap sm:flex-nowrap flex-shrink-0">
               <Link
                 href={`/dashboard/seller/products/${_id}`}
                 className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 text-xs font-medium text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-500 hover:text-white hover:border-blue-500 px-3 py-2 sm:py-1.5 rounded-lg transition-all duration-150"
               >
                 <Eye size={14} />
-                <span className="inline">Details</span>
+                <span>Details</span>
               </Link>
               <button
                 onClick={() => setShowEdit(true)}
                 className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 text-xs font-medium text-emerald-600 border border-emerald-200 bg-emerald-50 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 px-3 py-2 sm:py-1.5 rounded-lg transition-all duration-150"
               >
                 <Pencil size={14} />
-                <span className="inline">Edit</span>
+                <span>Edit</span>
               </button>
               <button
                 onClick={() => setShowDelete(true)}
                 className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 text-xs font-medium text-red-500 border border-red-100 bg-red-50 hover:bg-red-500 hover:text-white hover:border-red-500 px-3 py-2 sm:py-1.5 rounded-lg transition-all duration-150"
               >
                 <Trash2 size={14} />
-                <span className="inline">Delete</span>
+                <span>Delete</span>
               </button>
             </div>
           </div>
 
-          {/* Meta row */}
           <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 mt-1 sm:mt-0">
             <span className="flex items-center gap-1">
-              <Tag size={11} />
-              {category || "—"}
+              <Tag size={11} /> {category || "—"}
             </span>
             <span className="hidden sm:inline text-gray-200">|</span>
             <span className="flex items-center gap-1">
-              <Package size={11} />
-              Qty: {quantity ?? "—"}
+              <Package size={11} /> Qty: {quantity ?? "—"}
             </span>
             <span className="hidden sm:inline text-gray-200">|</span>
             <span className="flex items-center gap-1">
-              <Clock size={11} />
-              {createdAt ? timeAgo(createdAt) : "Recently"}
+              <Clock size={11} /> {createdAt ? timeAgo(createdAt) : "Recently"}
             </span>
           </div>
 
-          {/* Bottom row: condition + price */}
           <div className="flex items-center justify-between mt-2 sm:mt-1 pt-2 sm:pt-0 border-t sm:border-0 border-gray-50">
             <span
               className={`text-xs font-medium px-2.5 py-1 sm:py-0.5 rounded-full ${
@@ -145,7 +132,6 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
         </div>
       </div>
 
-      {/* Modals */}
       {showEdit && (
         <EditProductModal
           product={product}
@@ -189,36 +175,19 @@ export function ProductCardSkeleton() {
   );
 }
 
-// ─── Full list with search, filter, loading & empty states ───────────────────
+// ─── Full list ────────────────────────────────────────────────────────────────
 export default function ProductList({
   products = [],
   isLoading = false,
   onUpdated,
   onDeleted,
-  search = "", // ✅ controlled by parent
+  search = "",
   setSearch,
-  filterCondition = "all", // ✅ controlled by parent
+  filterCondition = "all",
   setFilterCondition,
+  totalAll = 0,
 }) {
   const conditions = ["all", "used", "like_new", "refurbished"];
-
-  // ✅ Client-side filter as fallback (works with server-side too)
-  const filtered = products.filter((p) => {
-    const name = p.title || p.productTitle || "";
-    const matchSearch =
-      name.toLowerCase().includes(search.toLowerCase()) ||
-      (p.category || "").toLowerCase().includes(search.toLowerCase());
-
-    // ✅ Normalize condition to handle "Like New" → "like_new"
-    const productCondition = (p.condition || "")
-      .toLowerCase()
-      .replace(/\s+/g, "_");
-
-    const matchCondition =
-      filterCondition === "all" || productCondition === filterCondition;
-
-    return matchSearch && matchCondition;
-  });
 
   return (
     <div className="flex flex-col gap-4">
@@ -242,19 +211,18 @@ export default function ProductList({
                   : "bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-600"
               }`}
             >
-              {c.replace("_", " ")}
+              {c.replace(/_/g, " ")}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Results count */}
-      {!isLoading && products.length > 0 && (
+      {/* Results count — uses server result directly */}
+      {!isLoading && (
         <p className="text-xs text-gray-400">
           Showing{" "}
-          <span className="font-semibold text-gray-600">{filtered.length}</span>{" "}
-          of{" "}
           <span className="font-semibold text-gray-600">{products.length}</span>{" "}
+          of <span className="font-semibold text-gray-600">{totalAll}</span>{" "}
           products
         </p>
       )}
@@ -266,20 +234,20 @@ export default function ProductList({
             <ProductCardSkeleton key={i} />
           ))}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : products.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mb-3">
             <Package size={24} className="text-emerald-400" />
           </div>
           <p className="text-sm text-gray-500">
-            {products.length === 0
+            {totalAll === 0
               ? "You haven't added any products yet."
               : "No products match your search."}
           </p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {filtered.map((product) => (
+          {products.map((product) => (
             <ProductCard
               key={product._id}
               product={product}

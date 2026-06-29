@@ -9,6 +9,7 @@ import { serverFetch } from "@/lib/api/server";
 const MyProductsPage = () => {
   const { data: session } = useSession();
   const [products, setProducts] = useState([]);
+  const [totalAll, setTotalAll] = useState(0); // total unfiltered count
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterCondition, setFilterCondition] = useState("all");
@@ -26,16 +27,34 @@ const MyProductsPage = () => {
         const data = await serverFetch(
           `/api/sellerProducts/${session.user.email}?${params.toString()}`,
         );
-        setProducts(data);
+        setProducts(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to fetch products:", err);
+        setProducts([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    // ✅ Debounce search so we don't fire on every keystroke
-    const debounce = setTimeout(fetchProducts, 300);
+    // Also fetch total unfiltered count for display
+    const fetchTotal = async () => {
+      try {
+        const data = await serverFetch(
+          `/api/sellerProducts/${session.user.email}`,
+        );
+        setTotalAll(Array.isArray(data) ? data.length : 0);
+      } catch {
+        // ignore
+      }
+    };
+
+    const debounce = setTimeout(() => {
+      fetchProducts();
+      if (filterCondition === "all" && !search) {
+        fetchTotal();
+      }
+    }, 300);
+
     return () => clearTimeout(debounce);
   }, [session?.user?.email, search, filterCondition]);
 
@@ -65,6 +84,7 @@ const MyProductsPage = () => {
           setSearch={setSearch}
           filterCondition={filterCondition}
           setFilterCondition={setFilterCondition}
+          totalAll={totalAll || products.length}
         />
       </div>
     </div>
