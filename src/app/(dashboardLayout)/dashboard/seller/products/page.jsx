@@ -1,25 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "@/lib/auth-client"; // adjust to your better-auth path
+import { useSession } from "@/lib/auth-client";
 import DashboardHeader from "@/components/DashboardHeader";
 import ProductList from "@/components/ProductCard";
 import { serverFetch } from "@/lib/api/server";
-
 
 const MyProductsPage = () => {
   const { data: session } = useSession();
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filterCondition, setFilterCondition] = useState("all");
 
   useEffect(() => {
     if (!session?.user?.email) return;
 
     const fetchProducts = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
+        const params = new URLSearchParams();
+        if (search) params.set("search", search);
+        if (filterCondition !== "all") params.set("condition", filterCondition);
+
         const data = await serverFetch(
-          `/api/sellerProducts/${session.user.email}`,
+          `/api/sellerProducts/${session.user.email}?${params.toString()}`,
         );
         setProducts(data);
       } catch (err) {
@@ -29,17 +34,17 @@ const MyProductsPage = () => {
       }
     };
 
-    fetchProducts();
-  }, [session?.user?.email]);
+    // ✅ Debounce search so we don't fire on every keystroke
+    const debounce = setTimeout(fetchProducts, 300);
+    return () => clearTimeout(debounce);
+  }, [session?.user?.email, search, filterCondition]);
 
-  // Called by EditProductModal after a successful update
   const handleUpdated = (updatedProduct) => {
     setProducts((prev) =>
       prev.map((p) => (p._id === updatedProduct._id ? updatedProduct : p)),
     );
   };
 
-  // Called by DeleteConfirmModal after a successful delete
   const handleDeleted = (deletedId) => {
     setProducts((prev) => prev.filter((p) => p._id !== deletedId));
   };
@@ -56,6 +61,10 @@ const MyProductsPage = () => {
           isLoading={isLoading}
           onUpdated={handleUpdated}
           onDeleted={handleDeleted}
+          search={search}
+          setSearch={setSearch}
+          filterCondition={filterCondition}
+          setFilterCondition={setFilterCondition}
         />
       </div>
     </div>

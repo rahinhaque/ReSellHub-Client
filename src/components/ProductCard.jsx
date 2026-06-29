@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, Tag, Clock, Package, Eye } from "lucide-react"; // ← add Eye
-import Link from "next/link"; // ← add Link
+import { Pencil, Trash2, Tag, Clock, Package, Eye } from "lucide-react";
+import Link from "next/link";
 import DeleteConfirmModal from "./Deleteconfirmmodal";
 import EditProductModal from "./Editproductmodal ";
 
@@ -27,17 +27,13 @@ function timeAgo(dateStr) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-// Safely extract cover image from any possible shape
 function getCoverImage(product) {
-  // New schema: images is an array
   if (Array.isArray(product.images) && product.images.length > 0) {
     return product.images[0];
   }
-  // images might be a plain string (edge case)
   if (typeof product.images === "string" && product.images.length > 0) {
     return product.images;
   }
-  // Old schema fallback
   if (
     typeof product.productImage === "string" &&
     product.productImage.length > 0
@@ -58,7 +54,9 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
 
   const displayTitle = title || product.productTitle || "Untitled product";
   const coverImage = getCoverImage(product);
-  const conditionKey = condition || "used";
+
+  // ✅ Normalize condition key to handle any casing from DB
+  const conditionKey = (condition || "used").toLowerCase().replace(/\s+/g, "_");
 
   return (
     <>
@@ -138,7 +136,7 @@ export function ProductCard({ product, onUpdated, onDeleted }) {
                 conditionStyles[conditionKey] || conditionStyles["used"]
               }`}
             >
-              {conditionLabels[conditionKey] || conditionKey}
+              {conditionLabels[conditionKey] || condition || conditionKey}
             </span>
             <span className="text-base font-bold text-emerald-600">
               {price ? `৳${Number(price).toLocaleString()}` : "No price set"}
@@ -197,19 +195,28 @@ export default function ProductList({
   isLoading = false,
   onUpdated,
   onDeleted,
+  search = "", // ✅ controlled by parent
+  setSearch,
+  filterCondition = "all", // ✅ controlled by parent
+  setFilterCondition,
 }) {
-  const [search, setSearch] = useState("");
-  const [filterCondition, setFilterCondition] = useState("all");
-
   const conditions = ["all", "used", "like_new", "refurbished"];
 
+  // ✅ Client-side filter as fallback (works with server-side too)
   const filtered = products.filter((p) => {
     const name = p.title || p.productTitle || "";
     const matchSearch =
       name.toLowerCase().includes(search.toLowerCase()) ||
-      p.category?.toLowerCase().includes(search.toLowerCase());
+      (p.category || "").toLowerCase().includes(search.toLowerCase());
+
+    // ✅ Normalize condition to handle "Like New" → "like_new"
+    const productCondition = (p.condition || "")
+      .toLowerCase()
+      .replace(/\s+/g, "_");
+
     const matchCondition =
-      filterCondition === "all" || p.condition === filterCondition;
+      filterCondition === "all" || productCondition === filterCondition;
+
     return matchSearch && matchCondition;
   });
 
